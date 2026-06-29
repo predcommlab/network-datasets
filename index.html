@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<!--
+  Network datasets index  (DRAFT)
+
+  Self-contained: double-click to open in a browser. No server needed.
+
+  HOW TO MAINTAIN:
+  - All data is in the STUDIES array near the bottom.
+  - Each study can carry several values per facet (arrays), e.g.
+    technique: ["EEG", "Behavioural responses"].
+  - FACETS lists every filter (the full PPiMP label set). A facet only
+    appears in the sidebar once at least one study has a value for it,
+    so the filters fill in as the catalogue is completed.
+  - Source of truth for each study: about/studies/<id>.md.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Network datasets</title>
+<style>
+  :root{--page:#f6f7f9;--card:#fff;--fg:#1a1a1c;--muted:#70707a;--line:#ebebf0;--chip:#f1f1f4;
+    --accent:#2560cf;--accent-bg:#eef3fd;--ok:#147a55;--ok-bg:#e7f6ef;
+    --shadow:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.06);
+    --shadow-hover:0 6px 18px rgba(16,24,40,.09);--radius:14px;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--fg);line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 22px 60px;}
+  header{border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:16px;}
+  h1{font-size:22px;font-weight:600;margin:0;}
+  .frame{color:var(--muted);font-size:14px;margin:6px 0 0;}
+  .topbar{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+  .search{flex:1;height:42px;border:1px solid var(--line);border-radius:10px;padding:0 14px;font-size:14px;color:var(--fg);background:var(--card);}
+  .search:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg);}
+  .count{font-size:13px;color:var(--muted);white-space:nowrap;}
+  .active{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+  .chip{font-size:12px;padding:3px 10px;border-radius:999px;background:var(--accent);color:#fff;cursor:pointer;}
+  .clear{font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--muted);cursor:pointer;}
+  .layout{display:flex;gap:28px;align-items:flex-start;}
+  .filters{width:236px;flex:none;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);}
+  .facet{border-bottom:1px solid var(--line);}
+  .facet:last-child{border-bottom:none;}
+  .fhead{width:100%;display:flex;justify-content:space-between;align-items:center;background:#fff;border:none;padding:11px 14px;font-size:13px;font-weight:500;color:var(--fg);cursor:pointer;}
+  .fhead:hover{background:#fafafa;}
+  .vals{padding:2px 14px 12px;}
+  .opt{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--fg);padding:4px 0;cursor:pointer;}
+  .opt.empty{color:var(--muted);}
+  .opt .cnt{margin-left:auto;color:var(--muted);font-size:12px;}
+  .opt input{margin:0;}
+  .results{flex:1;display:flex;flex-direction:column;gap:14px;min-width:0;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);transition:box-shadow .15s ease;}
+  .card:hover{box-shadow:var(--shadow-hover);}
+  .ch{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+  .nm{font-size:16px;font-weight:600;margin:0;}
+  .links{border-top:1px solid var(--line);margin-top:13px;padding-top:11px;display:flex;flex-direction:column;gap:8px;}
+  .lrow{display:flex;gap:10px;font-size:13px;line-height:1.45;}
+  .llabel{flex:none;width:46px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding-top:3px;}
+  .lrow a{color:var(--accent);text-decoration:none;}
+  .lrow a:hover{text-decoration:underline;}
+  .lrow .none{color:var(--muted);}
+  .ptitle{color:var(--fg);}
+  .doiline{display:block;margin-top:3px;}
+  .doilabel{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-right:5px;}
+  .doicode{font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
+  .ext{font-size:11px;padding:2px 8px;border-radius:6px;background:var(--chip);color:var(--muted);margin-left:8px;}
+  .pub{font-size:11px;padding:2px 9px;border-radius:6px;background:var(--ok-bg);color:var(--ok);white-space:nowrap;}
+  .unpub{font-size:11px;padding:2px 9px;border-radius:6px;background:var(--chip);color:var(--muted);white-space:nowrap;}
+  .by{font-size:13.5px;color:var(--muted);margin:9px 0 12px;}
+  .by b{color:var(--fg);font-weight:500;}
+  .tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+  .tag{font-size:11.5px;padding:3px 11px;border-radius:999px;background:var(--accent-bg);color:var(--accent);}
+  .foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:10px;gap:10px;flex-wrap:wrap;}
+  .data{font-size:13px;color:var(--accent);text-decoration:none;}
+  .data.none{color:var(--muted);}
+  .doi{font-size:12px;color:var(--muted);}
+  .note{margin-top:24px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px;}
+  @media (max-width:760px){.layout{flex-direction:column;}.filters{width:100%;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Network datasets <span style="font-size:11px;font-weight:400;color:var(--muted);background:var(--chip);padding:2px 8px;border-radius:6px;vertical-align:middle;">draft</span></h1>
+    <p class="frame">A shared directory of datasets from across the network. Each one is listed under its own authors and links out to where they host it.</p>
+  </header>
+
+  <div class="topbar">
+    <input id="q" class="search" type="search" placeholder="Search datasets, authors…" aria-label="Search">
+    <span id="count" class="count"></span>
+  </div>
+  <div id="active" class="active"></div>
+
+  <div class="layout">
+    <aside id="filters" class="filters"></aside>
+    <section id="results" class="results"></section>
+  </div>
+
+  <p class="note">Draft. The filters on the left are the full label set we want; each one appears once a dataset carries that label, so they fill in as owners complete the catalogue. Values shown now are a first pass.</p>
+</div>
+
+<script>
+const STUDIES = [
+  {id:"statements-written", name:"Statements (Written)", authors:"Philipp Schumann", institution:"UKE / RUB", external:false,
+   year:null, published:false, repo:null, doi:null,
+   species:["Human"], modality:["Visual"], technique:["Behavioural responses"]},
+  {id:"voicepriors-behaviour", name:"Voice Priors (behavioural)", authors:"Carina Ufer", institution:"RUB", external:false,
+   year:null, published:false, repo:null, doi:null,
+   species:["Human"], modality:["Auditory"], technique:["Behavioural responses"]},
+  {id:"voicepriors-eeg", name:"Voice Priors (EEG)", authors:"Janika Becker", institution:"RUB", external:false,
+   year:null, published:false, repo:null, doi:null,
+   species:["Human"], modality:["Auditory"], technique:["EEG","Behavioural responses"]},
+  {id:"statements-voiced", name:"Statements (Voiced)", authors:"Nele Pfitzner", institution:"RUB / Oldenburg", external:false,
+   year:null, published:false, repo:null, doi:null,
+   species:["Human"], modality:["Auditory"], technique:["Behavioural responses"]},
+  {id:"voicerating-prestudy", name:"Voice Rating Pre-study", authors:"Nele Pfitzner", institution:"RUB / Oldenburg", external:false,
+   year:null, published:false, repo:null, doi:null,
+   species:["Human"], modality:["Auditory"], technique:["Behavioural responses"]},
+  {id:"prederror-greve2018", name:"Prediction-error & schema memory (Greve et al. 2018)", authors:"Greve, Cooper, Tibon & Henson", institution:"MRC-CBU, Cambridge", external:true,
+   year:"2018", published:true, repo:"https://osf.io/x692m/", doi:"10.1037/xge0000498",
+   paper:"Knowledge is power: prior knowledge aids memory for both congruent and incongruent events, but in different ways",
+   species:["Human"], modality:["Visual"], technique:["Behavioural responses"]}
+];
+
+const FACETS = [
+  {key:"status", label:"Status"},
+  {key:"year", label:"Year"},
+  {key:"species", label:"Species"},
+  {key:"population", label:"Population"},
+  {key:"paradigm", label:"Task paradigm"},
+  {key:"activePassive", label:"Active vs. passive"},
+  {key:"priorType", label:"Type of prior"},
+  {key:"priorInduction", label:"Induction of prior"},
+  {key:"predictability", label:"Predictability"},
+  {key:"volatility", label:"Volatility"},
+  {key:"modality", label:"Sensory modality"},
+  {key:"stimulus", label:"Stimulus properties"},
+  {key:"stimulusQuality", label:"Stimulus quality"},
+  {key:"technique", label:"Recording technique"},
+  {key:"signalLevel", label:"Signal level"},
+  {key:"anatomicalScale", label:"Anatomical scale"}
+];
+
+const VALUES = {
+  status: ["Published","Not yet published"],
+  species: ["Human","Macaque","Mouse","Rat","Simulated data"],
+  population: ["Healthy","Clinical"],
+  paradigm: ["Oddball","Serial task","Recognition","Memory","Detection","Discrimination"],
+  activePassive: ["Active","Passive"],
+  priorType: ["Cue","Sequence","Natural environment"],
+  priorInduction: ["Implicit","Explicit","Naturalistic / long-term","Artificial / long-term"],
+  predictability: ["Deterministic","Probabilistic / stochastic","Random"],
+  volatility: ["High","Low"],
+  modality: ["Auditory","Visual","Somatosensory","Cross-modal"],
+  stimulus: ["Simple tones","Natural sounds","Gabor patches","Natural images","Faces","Speech"],
+  stimulusQuality: ["Distinct","Noisy","Ambiguous"],
+  technique: ["Reaction times","Behavioural responses","Eye-tracking","EEG","MEG","fMRI","fNIRS","ECoG","Single-unit","TMS"],
+  signalLevel: ["BOLD","Evoked potentials","Oscillatory power","Phase coherence","Spiking rate"],
+  anatomicalScale: ["Whole-brain","Region of interest (ROI)","Laminar / layer-specific"]
+};
+
+function valuesOf(s, key){
+  if(key==="status") return [s.published ? "Published" : "Not yet published"];
+  if(key==="year") return s.year ? [s.year] : [];
+  return s[key] || [];
+}
+
+const sel = {}; FACETS.forEach(f=>sel[f.key]=new Set());
+const openState = {}; FACETS.forEach(f=>openState[f.key]=["status","year","technique","modality"].includes(f.key));
+let q = "";
+
+function facetValues(key){
+  const counts = new Map();
+  STUDIES.forEach(s=>valuesOf(s,key).forEach(v=>counts.set(v,(counts.get(v)||0)+1)));
+  let opts;
+  if(VALUES[key]){
+    opts = VALUES[key].slice();
+    [...counts.keys()].forEach(v=>{ if(!opts.includes(v)) opts.push(v); });
+  } else {
+    opts = [...counts.keys()].sort((a,b)=> String(a)<String(b) ? -1 : 1);
+  }
+  return opts.map(v=>[v, counts.get(v)||0]);
+}
+function matches(s){
+  if(q){ if(!(s.name+" "+s.authors+" "+s.institution).toLowerCase().includes(q)) return false; }
+  for(const f of FACETS){
+    const want = sel[f.key];
+    if(want.size===0) continue;
+    if(!valuesOf(s,f.key).some(v=>want.has(v))) return false;
+  }
+  return true;
+}
+function renderFilters(){
+  const el = document.getElementById("filters"); el.innerHTML = "";
+  FACETS.forEach(f=>{
+    const vals = facetValues(f.key);
+    if(vals.length===0) return;
+    const box = document.createElement("div"); box.className = "facet";
+    const h = document.createElement("button"); h.className = "fhead";
+    h.innerHTML = "<span>"+f.label+"</span><span>"+(openState[f.key]?"–":"+")+"</span>";
+    h.onclick = ()=>{ openState[f.key]=!openState[f.key]; renderFilters(); };
+    box.appendChild(h);
+    if(openState[f.key]){
+      const list = document.createElement("div"); list.className = "vals";
+      vals.forEach(([v,c])=>{
+        const row = document.createElement("label"); row.className = "opt" + (c===0 ? " empty" : "");
+        const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = sel[f.key].has(v);
+        cb.onchange = ()=>{ cb.checked ? sel[f.key].add(v) : sel[f.key].delete(v); render(); };
+        const txt = document.createElement("span"); txt.textContent = v;
+        row.appendChild(cb); row.appendChild(txt);
+        if(c>0){ const cnt = document.createElement("span"); cnt.className = "cnt"; cnt.textContent = c; row.appendChild(cnt); }
+        list.appendChild(row);
+      });
+      box.appendChild(list);
+    }
+    el.appendChild(box);
+  });
+}
+function renderActive(){
+  const el = document.getElementById("active"); el.innerHTML = "";
+  let any = false;
+  FACETS.forEach(f=> sel[f.key].forEach(v=>{
+    any = true;
+    const chip = document.createElement("span"); chip.className = "chip"; chip.textContent = v+" ✕";
+    chip.onclick = ()=>{ sel[f.key].delete(v); render(); };
+    el.appendChild(chip);
+  }));
+  if(any){
+    const clr = document.createElement("button"); clr.className = "clear"; clr.textContent = "Clear all";
+    clr.onclick = ()=>{ FACETS.forEach(f=>sel[f.key].clear()); render(); };
+    el.appendChild(clr);
+  }
+}
+function render(){
+  renderFilters(); renderActive();
+  const res = document.getElementById("results"); res.innerHTML = "";
+  let n = 0;
+  STUDIES.forEach(s=>{
+    if(!matches(s)) return; n++;
+    const tags = s.technique.concat(s.modality).map(t=>'<span class="tag">'+t+'</span>').join("");
+    const dataLink = s.repo
+      ? '<a href="'+s.repo+'" target="_blank" rel="noopener">'+s.repo.replace("https://","")+'</a>'
+      : '<span class="none">not yet linked</span>';
+    const paperRow = s.paper
+      ? '<div class="lrow"><span class="llabel">Paper</span><span><span class="ptitle">"'+s.paper+'"</span><span class="doiline"><span class="doilabel">DOI</span><a class="doicode" href="https://doi.org/'+s.doi+'" target="_blank" rel="noopener">'+s.doi+'</a></span></span></div>'
+      : '';
+    const status = s.published
+      ? '<span class="pub">Published'+(s.year?" "+s.year:"")+'</span>'
+      : '<span class="unpub">Not yet published</span>';
+    const card = document.createElement("div"); card.className = "card";
+    card.innerHTML =
+      '<div class="ch"><p class="nm">'+s.name+'</p>'+status+'</div>'+
+      '<p class="by">Authors: <b>'+s.authors+'</b></p>'+
+      '<div class="tags">'+tags+'</div>'+
+      '<div class="links">'+
+        '<div class="lrow"><span class="llabel">Data</span>'+dataLink+'</div>'+
+        paperRow+
+      '</div>';
+    res.appendChild(card);
+  });
+  document.getElementById("count").textContent = n+" of "+STUDIES.length+" datasets";
+}
+document.getElementById("q").addEventListener("input", e=>{ q = e.target.value.trim().toLowerCase(); render(); });
+render();
+</script>
+</body>
+</html>
