@@ -5,7 +5,7 @@
   Self-contained: double-click to open in a browser. No server needed.
 
   HOW TO MAINTAIN:
-  - All data is in the STUDIES array near the bottom.
+  - Dataset data is in studies.js (edit that to add or update a dataset).
   - Each study can carry several values per facet (arrays), e.g.
     technique: ["EEG", "Behavioural responses"].
   - FACETS lists every filter (the full PPiMP label set). A facet only
@@ -123,29 +123,8 @@
   </footer>
 </div>
 
+<script src="studies.js"></script>
 <script>
-const STUDIES = [
-  {id:"statements-written", name:"Statements (Written)", authors:"Philipp Schumann", institution:"UKE / RUB", external:false,
-   year:null, published:false, repo:null, doi:null,
-   species:["Human"], modality:["Visual"], technique:["Behavioural responses"]},
-  {id:"voicepriors-behaviour", name:"Voice Priors (behavioural)", authors:"Carina Ufer", institution:"RUB", external:false,
-   year:null, published:false, repo:null, doi:null,
-   species:["Human"], modality:["Auditory"], technique:["Behavioural responses"]},
-  {id:"voicepriors-eeg", name:"Voice Priors (EEG)", authors:"Janika Becker", institution:"RUB", external:false,
-   year:null, published:false, repo:null, doi:null,
-   species:["Human"], modality:["Auditory"], technique:["EEG","Behavioural responses"]},
-  {id:"statements-voiced", name:"Statements (Voiced)", authors:"Nele Pfitzner", institution:"RUB / Oldenburg", external:false,
-   year:null, published:false, repo:null, doi:null,
-   species:["Human"], modality:["Auditory"], technique:["Behavioural responses"]},
-  {id:"voicerating-prestudy", name:"Voice Rating Pre-study", authors:"Nele Pfitzner", institution:"RUB / Oldenburg", external:false,
-   year:null, published:false, repo:null, doi:null,
-   species:["Human"], modality:["Auditory"], technique:["Behavioural responses"]},
-  {id:"prederror-greve2018", name:"Prediction-error & schema memory (Greve et al. 2018)", authors:"Greve, Cooper, Tibon & Henson", institution:"MRC-CBU, Cambridge", external:true,
-   year:"2018", published:true, repo:"https://osf.io/x692m/", doi:"10.1037/xge0000498",
-   paper:"Knowledge is power: prior knowledge aids memory for both congruent and incongruent events, but in different ways",
-   species:["Human"], modality:["Visual"], technique:["Behavioural responses"]}
-];
-
 const FACETS = [
   {key:"status", label:"Status"},
   {key:"year", label:"Year"},
