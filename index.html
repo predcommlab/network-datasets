@@ -18,6 +18,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Network datasets</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{--page:#f6f7f9;--card:#fff;--fg:#1a1a1c;--muted:#70707a;--line:#ebebf0;--chip:#f1f1f4;
     --accent:#2560cf;--accent-bg:#eef3fd;--ok:#147a55;--ok-bg:#e7f6ef;
@@ -26,11 +28,12 @@
   *{box-sizing:border-box}
   body{margin:0;background:var(--page);color:var(--fg);line-height:1.55;
     -webkit-font-smoothing:antialiased;
-    font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+    font-family:"Inter",-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
   .wrap{max-width:1080px;margin:0 auto;padding:28px 22px 60px;}
-  header{border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:16px;}
-  h1{font-size:22px;font-weight:600;margin:0;}
-  .frame{color:var(--muted);font-size:14px;margin:6px 0 0;}
+  header{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px 32px;margin-bottom:22px;box-shadow:var(--shadow);}
+  h1{font-size:27px;font-weight:600;margin:0;letter-spacing:-.015em;}
+  .frame{color:#3a3a42;font-size:16px;line-height:1.55;margin:11px 0 0;}
+  .thanks{color:#5b6270;font-size:13.5px;line-height:1.5;margin:16px 0 0;padding-top:14px;border-top:0.5px solid var(--line);}
   .topbar{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
   .search{flex:1;height:42px;border:1px solid var(--line);border-radius:10px;padding:0 14px;font-size:14px;color:var(--fg);background:var(--card);}
   .search:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg);}
@@ -40,10 +43,18 @@
   .clear{font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--muted);cursor:pointer;}
   .layout{display:flex;gap:28px;align-items:flex-start;}
   .filters{width:236px;flex:none;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);}
+  .fbar{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line);}
+  .ftitle{font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+  .fctrl{display:flex;gap:2px;}
+  .ficon{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:none;border:none;border-radius:6px;color:var(--muted);cursor:pointer;}
+  .ficon:hover{background:var(--page);color:var(--fg);}
   .facet{border-bottom:1px solid var(--line);}
   .facet:last-child{border-bottom:none;}
-  .fhead{width:100%;display:flex;justify-content:space-between;align-items:center;background:#fff;border:none;padding:11px 14px;font-size:13px;font-weight:500;color:var(--fg);cursor:pointer;}
-  .fhead:hover{background:#fafafa;}
+  .fhead{width:100%;display:flex;justify-content:space-between;align-items:center;background:var(--card);border:none;padding:12px 14px;font-size:13px;font-weight:500;color:var(--fg);cursor:pointer;text-align:left;transition:background .15s ease;}
+  .fhead:hover{background:var(--page);}
+  .fhead.open{box-shadow:inset 2px 0 0 var(--accent);}
+  .chev{width:6px;height:6px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:rotate(-45deg);transition:transform .18s ease,border-color .15s ease;flex:none;margin:0 2px 0 8px;}
+  .fhead.open .chev{transform:rotate(45deg);border-color:var(--accent);}
   .vals{padding:2px 14px 12px;}
   .opt{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--fg);padding:4px 0;cursor:pointer;}
   .opt.empty{color:var(--muted);}
@@ -75,7 +86,12 @@
   .data{font-size:13px;color:var(--accent);text-decoration:none;}
   .data.none{color:var(--muted);}
   .doi{font-size:12px;color:var(--muted);}
-  .note{margin-top:24px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px;}
+  .foot{margin-top:30px;border-top:1px solid var(--line);padding-top:18px;}
+  .foot-line{font-size:14px;color:var(--fg);}
+  .foot-line b{font-weight:600;}
+  .foot-sub{font-size:13px;color:var(--muted);margin-top:4px;}
+  .foot-sub a{color:var(--accent);text-decoration:none;}
+  .foot-sub a:hover{text-decoration:underline;}
   @media (max-width:760px){.layout{flex-direction:column;}.filters{width:100%;}}
 </style>
 </head>
@@ -83,7 +99,8 @@
 <div class="wrap">
   <header>
     <h1>Network datasets <span style="font-size:11px;font-weight:400;color:var(--muted);background:var(--chip);padding:2px 8px;border-radius:6px;vertical-align:middle;">draft</span></h1>
-    <p class="frame">A shared directory of datasets from across the network. Each one is listed under its own authors and links out to where they host it.</p>
+    <p class="frame">A place to explore datasets shared by researchers, brought together so they are easier to find.</p>
+    <p class="thanks">We thank the authors who have shared their datasets here. Each dataset remains their own work.</p>
   </header>
 
   <div class="topbar">
@@ -93,11 +110,17 @@
   <div id="active" class="active"></div>
 
   <div class="layout">
-    <aside id="filters" class="filters"></aside>
+    <aside class="filters">
+      <div class="fbar"><span class="ftitle">Filters</span><span class="fctrl"><button id="expandAll" class="ficon" title="Expand all" aria-label="Expand all"><svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,5 8,8.5 12,5"/><polyline points="4,9 8,12.5 12,9"/></svg></button><button id="collapseAll" class="ficon" title="Collapse all" aria-label="Collapse all"><svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,8 8,4.5 12,8"/><polyline points="4,12 8,8.5 12,12"/></svg></button></span></div>
+      <div id="facets"></div>
+    </aside>
     <section id="results" class="results"></section>
   </div>
 
-  <p class="note">Draft. The filters on the left are the full label set we want; each one appears once a dataset carries that label, so they fill in as owners complete the catalogue. Values shown now are a first pass.</p>
+  <footer class="foot">
+    <div class="foot-line">Maintained by the <b>Predictive Cognition Lab</b></div>
+    <div class="foot-sub">Ruhr University Bochum &nbsp;·&nbsp; <a href="https://blanklab.eu/" target="_blank" rel="noopener">blanklab.eu</a></div>
+  </footer>
 </div>
 
 <script>
@@ -192,13 +215,13 @@ function matches(s){
   return true;
 }
 function renderFilters(){
-  const el = document.getElementById("filters"); el.innerHTML = "";
+  const el = document.getElementById("facets"); el.innerHTML = "";
   FACETS.forEach(f=>{
     const vals = facetValues(f.key);
     if(vals.length===0) return;
     const box = document.createElement("div"); box.className = "facet";
-    const h = document.createElement("button"); h.className = "fhead";
-    h.innerHTML = "<span>"+f.label+"</span><span>"+(openState[f.key]?"–":"+")+"</span>";
+    const h = document.createElement("button"); h.className = "fhead" + (openState[f.key] ? " open" : "");
+    h.innerHTML = "<span>"+f.label+"</span><span class='chev'></span>";
     h.onclick = ()=>{ openState[f.key]=!openState[f.key]; renderFilters(); };
     box.appendChild(h);
     if(openState[f.key]){
@@ -262,6 +285,8 @@ function render(){
   document.getElementById("count").textContent = n+" of "+STUDIES.length+" datasets";
 }
 document.getElementById("q").addEventListener("input", e=>{ q = e.target.value.trim().toLowerCase(); render(); });
+document.getElementById("expandAll").addEventListener("click", ()=>{ FACETS.forEach(f=>openState[f.key]=true); renderFilters(); });
+document.getElementById("collapseAll").addEventListener("click", ()=>{ FACETS.forEach(f=>openState[f.key]=false); renderFilters(); });
 render();
 </script>
 </body>
