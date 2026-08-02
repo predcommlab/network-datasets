@@ -78,8 +78,20 @@
   .ext{font-size:11px;padding:2px 8px;border-radius:6px;background:var(--chip);color:var(--muted);margin-left:8px;}
   .pub{font-size:11px;padding:2px 9px;border-radius:6px;background:var(--ok-bg);color:var(--ok);white-space:nowrap;}
   .unpub{font-size:11px;padding:2px 9px;border-radius:6px;background:var(--chip);color:var(--muted);white-space:nowrap;}
-  .by{font-size:13.5px;color:var(--muted);margin:9px 0 12px;}
+  .by{font-size:13.5px;color:var(--muted);margin:9px 0 4px;}
   .by b{color:var(--fg);font-weight:500;}
+  .meta{font-size:12.5px;color:var(--muted);margin:0 0 12px;line-height:1.5;}
+  .det{margin-top:12px;border-top:1px solid var(--line);padding-top:10px;}
+  .det summary{font-size:12px;color:var(--muted);cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:5px;}
+  .det summary::-webkit-details-marker{display:none;}
+  .det summary::before{content:"";width:5px;height:5px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform .18s ease;}
+  .det[open] summary::before{transform:rotate(45deg);}
+  .det summary:hover{color:var(--fg);}
+  .dbody{margin-top:10px;display:flex;flex-direction:column;gap:6px;}
+  .drow{display:flex;gap:10px;font-size:12.5px;line-height:1.45;}
+  .dkey{flex:none;width:132px;color:var(--muted);}
+  .dval{color:var(--fg);min-width:0;}
+  .dval.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;}
   .tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
   .tag{font-size:11.5px;padding:3px 11px;border-radius:999px;background:var(--accent-bg);color:var(--accent);}
   .foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:10px;gap:10px;flex-wrap:wrap;}
@@ -127,7 +139,7 @@
 <script>
 const FACETS = [
   {key:"status", label:"Status"},
-  {key:"year", label:"Year"},
+  {key:"owner", label:"Data owner"},
   {key:"species", label:"Species"},
   {key:"population", label:"Population"},
   {key:"paradigm", label:"Task paradigm"},
@@ -140,7 +152,6 @@ const FACETS = [
   {key:"stimulus", label:"Stimulus properties"},
   {key:"stimulusQuality", label:"Stimulus quality"},
   {key:"technique", label:"Recording technique"},
-  {key:"signalLevel", label:"Signal level"},
   {key:"anatomicalScale", label:"Anatomical scale"}
 ];
 
@@ -148,28 +159,39 @@ const VALUES = {
   status: ["Published","Not yet published"],
   species: ["Human","Macaque","Mouse","Rat","Simulated data"],
   population: ["Healthy","Clinical"],
-  paradigm: ["Oddball","Serial task","Recognition","Memory","Detection","Discrimination"],
+  paradigm: ["Oddball","Serial task","Recognition","Memory","Detection","Discrimination","Rating","Prediction","Decision-making"],
   activePassive: ["Active","Passive"],
   priorType: ["Cue","Sequence","Natural environment"],
   priorInduction: ["Implicit","Explicit","Naturalistic / long-term","Artificial / long-term"],
   predictability: ["Deterministic","Probabilistic / stochastic","Random"],
   volatility: ["High","Low"],
   modality: ["Auditory","Visual","Somatosensory","Cross-modal"],
-  stimulus: ["Simple tones","Natural sounds","Gabor patches","Natural images","Faces","Speech"],
+  stimulus: ["Simple tones","Natural sounds","Gabor patches","Natural images","Faces","Speech","Written text"],
   stimulusQuality: ["Distinct","Noisy","Ambiguous"],
-  technique: ["Reaction times","Behavioural responses","Eye-tracking","EEG","MEG","fMRI","fNIRS","ECoG","Single-unit","TMS"],
-  signalLevel: ["BOLD","Evoked potentials","Oscillatory power","Phase coherence","Spiking rate"],
+  technique: ["Reaction times","Behavioural responses","Eye-tracking","Pupillometry","EEG","MEG","fMRI","fNIRS","ECoG","Single-unit","TMS"],
   anatomicalScale: ["Whole-brain","Region of interest (ROI)","Laminar / layer-specific"]
 };
 
+// Labels shown inside a card's "Study details", in the owner's own wording.
+const RAW_LABELS = [
+  ["paradigm","Task paradigm"], ["priorType","Type of prior"],
+  ["priorInduction","Induction of prior"], ["predictability","Predictability"],
+  ["volatility","Volatility"], ["population","Sample"],
+  ["stimulus","Stimulus"], ["stimulusQuality","Stimulus quality"],
+  ["signalLevel","Recording detail"], ["anatomicalScale","Anatomical scale"]
+];
+
+const ESC = {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"};
+function esc(v){ return String(v==null?"":v).replace(/[&<>"']/g, c=>ESC[c]); }
+
 function valuesOf(s, key){
   if(key==="status") return [s.published ? "Published" : "Not yet published"];
-  if(key==="year") return s.year ? [s.year] : [];
+  if(key==="owner") return s.owner ? [s.owner] : [];
   return s[key] || [];
 }
 
 const sel = {}; FACETS.forEach(f=>sel[f.key]=new Set());
-const openState = {}; FACETS.forEach(f=>openState[f.key]=["status","year","technique","modality"].includes(f.key));
+const openState = {}; FACETS.forEach(f=>openState[f.key]=["status","owner","technique","modality"].includes(f.key));
 let q = "";
 
 function facetValues(key){
@@ -185,7 +207,11 @@ function facetValues(key){
   return opts.map(v=>[v, counts.get(v)||0]);
 }
 function matches(s){
-  if(q){ if(!(s.name+" "+s.authors+" "+s.institution).toLowerCase().includes(q)) return false; }
+  if(q){
+    const hay = [s.name, s.fullTitle, s.authors, s.owner, s.institution, s.acquisition,
+                 s.taskLabels].concat(Object.values(s.raw||{})).join(" ").toLowerCase();
+    if(!hay.includes(q)) return false;
+  }
   for(const f of FACETS){
     const want = sel[f.key];
     if(want.size===0) continue;
@@ -240,25 +266,60 @@ function render(){
   let n = 0;
   STUDIES.forEach(s=>{
     if(!matches(s)) return; n++;
-    const tags = s.technique.concat(s.modality).map(t=>'<span class="tag">'+t+'</span>').join("");
+    const tags = (s.technique||[]).concat(s.modality||[])
+      .map(t=>'<span class="tag">'+esc(t)+'</span>').join("");
+
+    // Nothing links out unless the owner marked the study published. Studies
+    // still awaiting publication say so, rather than showing an empty link.
     const dataLink = s.repo
-      ? '<a href="'+s.repo+'" target="_blank" rel="noopener">'+s.repo.replace("https://","")+'</a>'
-      : '<span class="none">not yet linked</span>';
-    const paperRow = s.paper
-      ? '<div class="lrow"><span class="llabel">Paper</span><span><span class="ptitle">"'+s.paper+'"</span><span class="doiline"><span class="doilabel">DOI</span><a class="doicode" href="https://doi.org/'+s.doi+'" target="_blank" rel="noopener">'+s.doi+'</a></span></span></div>'
+      ? '<a href="'+esc(s.repo)+'" target="_blank" rel="noopener">'+esc(s.repo.replace("https://",""))+'</a>'
+      : (s.published
+          ? '<span class="none">not publicly available</span>'
+          : '<span class="none">will be shared after publication</span>');
+
+    const doiPart = s.doi
+      ? '<span class="doiline"><span class="doilabel">DOI</span><a class="doicode" href="https://doi.org/'+esc(s.doi)+'" target="_blank" rel="noopener">'+esc(s.doi)+'</a></span>'
+      : (s.preprint ? '<span class="doiline"><a class="doicode" href="'+esc(s.preprint)+'" target="_blank" rel="noopener">preprint</a></span>' : '');
+    const paperRow = (s.fullTitle || doiPart)
+      ? '<div class="lrow"><span class="llabel">Paper</span><span>'+
+        (s.fullTitle ? '<span class="ptitle">"'+esc(s.fullTitle)+'"</span>' : '')+doiPart+'</span></div>'
       : '';
+
+    // The sheet's N cells are free text ("260 sub folders (use 'exclude' flag)"),
+    // so only add the unit where the cell does not already name one.
+    const unit = (v, word, already) =>
+      !v ? "" : (already.test(v) ? v : v+" "+word+(v==="1" ? "" : "s"));
+    const meta = [
+      s.institution,
+      unit(s.nParticipants, "participant", /particip|subject|folder/i),
+      unit(s.nSessions, "session", /session/i),
+      s.acquisition
+    ].filter(Boolean).map(esc).join(" &nbsp;·&nbsp; ");
+
+    // The owner's own wording for each label, kept verbatim. The filters above
+    // run on a normalised vocabulary; this is what they actually wrote.
+    const rows = RAW_LABELS.filter(([k])=>s.raw && s.raw[k])
+      .map(([k,label])=>'<div class="drow"><span class="dkey">'+label+'</span><span class="dval">'+esc(s.raw[k])+'</span></div>').join("");
+    const details = rows
+      ? '<details class="det"><summary>Study details</summary><div class="dbody">'+rows+
+        (s.taskLabels ? '<div class="drow"><span class="dkey">BIDS task label</span><span class="dval mono">'+esc(s.taskLabels)+'</span></div>' : '')+
+        '</div></details>'
+      : '';
+
     const status = s.published
-      ? '<span class="pub">Published'+(s.year?" "+s.year:"")+'</span>'
+      ? '<span class="pub">Published</span>'
       : '<span class="unpub">Not yet published</span>';
     const card = document.createElement("div"); card.className = "card";
     card.innerHTML =
-      '<div class="ch"><p class="nm">'+s.name+'</p>'+status+'</div>'+
-      '<p class="by">Authors: <b>'+s.authors+'</b></p>'+
+      '<div class="ch"><p class="nm">'+esc(s.name)+'</p>'+status+'</div>'+
+      '<p class="by">Authors: <b>'+esc(s.authors)+'</b></p>'+
+      (meta ? '<p class="meta">'+meta+'</p>' : '')+
       '<div class="tags">'+tags+'</div>'+
       '<div class="links">'+
         '<div class="lrow"><span class="llabel">Data</span>'+dataLink+'</div>'+
         paperRow+
-      '</div>';
+      '</div>'+
+      details;
     res.appendChild(card);
   });
   document.getElementById("count").textContent = n+" of "+STUDIES.length+" datasets";
