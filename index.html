@@ -116,7 +116,7 @@
   .opt input{margin:0;accent-color:var(--accent)}
   .results{flex:1;min-width:0}
   .cards{display:flex;flex-direction:column;gap:16px}
-  .empty{margin:6px 0 0;padding:20px;background:#fff;border:1px dashed var(--card-line);border-radius:var(--radius);color:var(--quiet);font-size:13px}
+  .no-results{margin:6px 0 0;padding:20px;background:#fff;border:1px dashed var(--card-line);border-radius:var(--radius);color:var(--quiet);font-size:13px}
   .linkbtn{font:inherit;font-size:13px;color:var(--accent);background:none;border:none;padding:0;cursor:pointer;text-decoration:underline}
 
   /* Dataset cards: four rows (title, people, tags, links) and a details
@@ -193,7 +193,7 @@
     </aside>
     <section id="results" class="results" aria-label="Datasets">
       <div id="cards" class="cards"></div>
-      <p id="empty" class="empty" hidden>No datasets match this search or selection. <button id="emptyClear" type="button" class="linkbtn">Clear the search and all filters</button></p>
+      <p id="empty" class="no-results" hidden>No datasets match this search or selection. <button id="emptyClear" type="button" class="linkbtn">Clear the search and all filters</button></p>
     </section>
   </div>
 
