@@ -32,7 +32,7 @@
   /* Tokens shared with the lab website (assets/scss/template.scss there). */
   :root{
     --accent:#1a46bb; --accent-weak:#c6d2ef; --accent-tint:#edf2fc;
-    --ink:#1d2433; --text:rgba(0,0,0,.8); --quiet:#5f6672;
+    --navy:#152238; --ink:#1d2433; --text:rgba(0,0,0,.8); --quiet:#5f6672;
     --line:#e3e6ea; --card-line:#d8dde3; --chip:#f1f3f5;
     --ok:#147a55; --ok-bg:#e7f6ef;
     --radius:10px;
@@ -60,7 +60,7 @@
 
   /* Navy footer with the 6px RDM seam on its top edge, as on the lab site. */
   .page-footer{background:var(--navy);margin-top:40px}
-  .page-footer::before{content:"";display:block;height:6px;background:url("img/rdm-strip@2x.png") left top / 290px 6px repeat-x}
+  .page-footer::before{content:"";display:block;height:6px;background-image:url("img/rdm-strip@2x.png");background-size:290px 6px;background-repeat:repeat-x;background-position:left top}
   .site-footer{max-width:1080px;margin:0 auto;padding:1.5rem 22px 1.7rem;font-size:.875rem;color:rgba(255,255,255,.72)}
   .site-footer p{margin:0 0 .55rem}
   .site-footer p:last-child{margin:0}
