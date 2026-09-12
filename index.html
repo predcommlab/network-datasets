@@ -132,14 +132,14 @@
   .card{background:#fff;border:1px solid var(--card-line);border-radius:var(--radius);padding:20px 22px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
   .ch{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
   .nm{font-size:17px;font-weight:700;color:var(--ink);margin:0;line-height:1.3;text-wrap:balance}
-  .pub,.unpub{font-size:11px;font-weight:500;padding:2px 9px;border-radius:6px;white-space:nowrap;flex:none;margin-top:2px}
-  .pub{background:var(--ok-bg);color:var(--ok)}
-  .unpub{background:var(--chip);color:var(--quiet)}
+  .pub,.unpub{font-size:12px;white-space:nowrap;flex:none;margin-top:3px}
+  .pub{font-weight:500;color:var(--ok);padding:1px 9px;border-radius:6px;background:var(--ok-bg);font-size:11px;margin-top:2px}
+  .unpub{color:var(--quiet)}
   .who{font-size:13px;color:var(--quiet);margin:6px 0 0;line-height:1.5}
   .who b{color:var(--ink);font-weight:500}
   .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
   .tags:empty{display:none}
-  .tag{font-size:12px;padding:2px 10px;border-radius:999px;background:var(--accent-tint);color:var(--accent)}
+  .tag{font-size:12px;padding:2px 10px;border-radius:999px;background:var(--chip);color:#3b4252}
   .actions{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;font-size:13px}
   .out{display:flex;gap:18px;flex-wrap:wrap}
   .out a{white-space:nowrap}
@@ -380,7 +380,7 @@ function render(){
       .map(t=>'<span class="tag">'+esc(t)+'</span>').join("");
 
     // Row 2: the people, then the institution.
-    const who = '<p class="who"><b>'+esc(s.authors || s.owner)+'</b>'+(s.institution ? ' &nbsp;·&nbsp; '+esc(s.institution) : '')+'</p>';
+    const who = '<p class="who"><b>'+esc(s.authors || s.owner)+'</b></p>';
 
     // Row 4: where the data and the paper are. Nothing links out unless the
     // owner marked the study published; the others say so in plain words.
@@ -403,7 +403,7 @@ function render(){
     const doiLink = s.doi ? '<a class="pdoi" href="https://doi.org/'+esc(s.doi)+'" target="_blank" rel="noopener">doi.org/'+esc(s.doi)+'<span class="arrow" aria-hidden="true">↗</span></a>' : '';
     const paperFull = (s.fullTitle ? '<span class="ptitle">'+esc(s.fullTitle)+'</span>' : '') + doiLink;
     const ownRows = RAW_LABELS.filter(([k])=>s.raw && s.raw[k]).map(([k,label])=>row(label, esc(s.raw[k]))).join("");
-    const rows = row("Sample size", sample) + row("Acquisition", esc(s.acquisition)) + row("Paper", paperFull)
+    const rows = row("Institution", esc(s.institution)) + row("Sample size", sample) + row("Acquisition", esc(s.acquisition)) + row("Paper", paperFull)
       + (s.taskLabels ? '<div class="drow"><span class="dkey">BIDS task label</span><span class="dval mono">'+esc(s.taskLabels)+'</span></div>' : '')
       + (ownRows ? '<div class="dgroup">Study design</div>'+ownRows : '');
     const panelId = "details-"+i;
