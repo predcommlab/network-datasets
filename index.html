@@ -47,11 +47,29 @@
   :is(a,button,input,summary,[tabindex]):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
-  .wrap{max-width:1080px;margin:0 auto;padding:36px 22px 56px}
+  .wrap{max-width:1080px;margin:0 auto;padding:36px 22px 48px}
+
+  /* Site chrome, as on blanklab.eu: navy bar with the serif wordmark. */
+  .site-bar{background:var(--navy)}
+  .bar-inner{max-width:1080px;margin:0 auto;padding:0 22px;min-height:64px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .brand{font-family:var(--serif);font-weight:700;font-size:1.35rem;letter-spacing:.01em;color:#fff;line-height:1.2}
+  .brand:hover{color:#fff;text-decoration:none}
+  .site-bar nav a{color:rgba(255,255,255,.82);font-size:15px;white-space:nowrap}
+  .site-bar nav a:hover{color:#fff}
+  .site-bar :is(a):focus-visible{outline-color:#fff}
+
+  /* Navy footer with the 6px RDM seam on its top edge, as on the lab site. */
+  .page-footer{background:var(--navy);margin-top:40px}
+  .page-footer::before{content:"";display:block;height:6px;background:url("img/rdm-strip@2x.png") left top / 290px 6px repeat-x}
+  .site-footer{max-width:1080px;margin:0 auto;padding:1.5rem 22px 1.7rem;font-size:.875rem;color:rgba(255,255,255,.72)}
+  .site-footer p{margin:0 0 .55rem}
+  .site-footer p:last-child{margin:0}
+  .site-footer a{color:rgba(255,255,255,.9)}
+  .site-footer a:focus-visible{outline-color:#fff}
 
   /* Page header, as on the lab site: serif title, one framing sentence. */
-  header{padding-bottom:22px;margin-bottom:22px;border-bottom:1px solid var(--line)}
-  h1{font-family:var(--serif);font-weight:600;font-size:1.75rem;line-height:1.2;color:var(--ink);margin:0;text-wrap:balance}
+  .page-header{padding-bottom:22px;margin-bottom:22px;border-bottom:1px solid var(--line)}
+  h1{font-family:var(--serif);font-weight:600;font-size:1.875rem;line-height:1.2;color:var(--ink);margin:0;text-wrap:balance}
   .draft{display:inline-block;vertical-align:middle;margin-left:.5rem;font-family:var(--sans);font-size:11px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;color:var(--quiet);background:var(--chip);padding:2px 8px;border-radius:6px}
   .frame{font-size:16px;margin:10px 0 0;max-width:52rem}
   .thanks{font-size:.875rem;color:var(--quiet);margin:10px 0 0;max-width:52rem}
@@ -132,8 +150,6 @@
   .dval{color:var(--ink);min-width:0;overflow-wrap:anywhere}
   .dval.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
 
-  footer{margin-top:36px;border-top:1px solid var(--line);padding-top:16px;font-size:.875rem;color:var(--quiet)}
-  footer b{color:var(--ink);font-weight:600}
 
   @media (prefers-reduced-motion:no-preference){
     .fhead,.ficon,.chip,.clear{transition:background-color .15s ease,color .15s ease,border-color .15s ease}
@@ -150,12 +166,18 @@
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
+<header class="site-bar">
+  <div class="bar-inner">
+    <a class="brand" href="https://blanklab.eu/">Predictive Cognition Lab</a>
+    <nav aria-label="Lab website"><a href="https://blanklab.eu/">Lab website</a></nav>
+  </div>
+</header>
+<main class="wrap">
+  <div class="page-header">
     <h1>Network datasets <span class="draft">draft</span></h1>
     <p class="frame">A place to explore datasets shared by researchers, brought together so they are easier to find.</p>
     <p class="thanks">We thank the authors who have shared their datasets here. Each dataset remains their own work.</p>
-  </header>
+  </div>
 
   <div class="topbar">
     <label for="q" class="sr-only">Search datasets</label>
@@ -177,10 +199,13 @@
     </section>
   </div>
 
-  <footer>
-    Maintained by the <b>Predictive Cognition Lab</b>, Ruhr University Bochum &nbsp;·&nbsp; <a href="https://blanklab.eu/">blanklab.eu</a>
-  </footer>
-</div>
+</main>
+<footer class="page-footer">
+  <div class="site-footer">
+    <p><a href="https://blanklab.eu/impressum/">Impressum</a> &nbsp;·&nbsp; <a href="https://blanklab.eu/datenschutz/">Datenschutz</a></p>
+    <p>Maintained by the Predictive Cognition Lab, Ruhr University Bochum &nbsp;·&nbsp; <a href="https://blanklab.eu/">blanklab.eu</a></p>
+  </div>
+</footer>
 
 <script src="studies.js"></script>
 <script>
