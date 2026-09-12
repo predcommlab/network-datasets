@@ -397,7 +397,7 @@ function render(){
     const ownRows = RAW_LABELS.filter(([k])=>s.raw && s.raw[k]).map(([k,label])=>row(label, esc(s.raw[k]))).join("");
     const rows = row("Sample", sample) + row("Acquisition", esc(s.acquisition)) + row("Paper", paperFull)
       + (s.taskLabels ? '<div class="drow"><span class="dkey">BIDS task label</span><span class="dval mono">'+esc(s.taskLabels)+'</span></div>' : '')
-      + (ownRows ? '<div class="dgroup">As described by the data owner</div>'+ownRows : '');
+      + (ownRows ? '<div class="dgroup">In the data owner\'s own words</div>'+ownRows : '');
     const panelId = "details-"+i;
     const details = rows
       ? '<button type="button" class="dtoggle" aria-expanded="false" aria-controls="'+panelId+'">Details<span class="chev" aria-hidden="true"></span></button>'
