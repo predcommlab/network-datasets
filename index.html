@@ -141,12 +141,17 @@
   .dtoggle:hover{color:var(--accent)}
   .dtoggle .chev{margin:0}
   .dtoggle[aria-expanded="true"] .chev{transform:rotate(45deg);border-color:var(--accent)}
-  .dbody{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
-  .drow{display:flex;gap:12px;font-size:13px;line-height:1.45}
-  .dkey{flex:none;width:132px;color:var(--quiet)}
+  /* Details panel: a tinted inset with a key/value grid; the paper's title
+     and DOI on separate lines; the owner's own wording as a second group. */
+  .dbody{margin-top:14px;padding:14px 16px 15px;background:var(--ground);border-radius:8px;display:flex;flex-direction:column;gap:7px}
+  .drow{display:grid;grid-template-columns:128px minmax(0,1fr);gap:4px 14px;font-size:13px;line-height:1.5}
+  .dkey{color:var(--quiet)}
   .dval{color:var(--ink);min-width:0;overflow-wrap:anywhere}
-  .dval.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
-  .dval a{overflow-wrap:anywhere}
+  .dval.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;padding-top:1px}
+  .ptitle{display:block;font-weight:500}
+  .pdoi{display:inline-block;margin-top:3px;font-size:12px;color:var(--accent)}
+  .pdoi .arrow{font-size:11px;margin-left:2px}
+  .dgroup{margin-top:6px;padding-top:10px;border-top:1px solid var(--line);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--quiet)}
 
 
   @media (prefers-reduced-motion:no-preference){
@@ -159,7 +164,7 @@
     .filters-toggle{display:inline-flex}
     .filters{width:100%;display:none}
     .filters.open{display:block}
-    .dkey{width:110px}
+    .drow{grid-template-columns:96px minmax(0,1fr)}
   }
 </style>
 </head>
@@ -387,12 +392,12 @@ function render(){
       !v ? "" : (already.test(v) ? v : v+" "+word+(v==="1" ? "" : "s"));
     const row = (k, v) => v ? '<div class="drow"><span class="dkey">'+k+'</span><span class="dval">'+v+'</span></div>' : '';
     const sample = [unit(s.nParticipants, "participant", /particip|subject|folder/i), unit(s.nSessions, "session", /session/i)].filter(Boolean).map(esc).join(", ");
-    const paperFull = s.fullTitle
-      ? '“'+esc(s.fullTitle)+'”'+(s.doi ? ' <a class="doicode" href="https://doi.org/'+esc(s.doi)+'" target="_blank" rel="noopener">doi.org/'+esc(s.doi)+'</a>' : '')
-      : (s.doi ? '<a class="doicode" href="https://doi.org/'+esc(s.doi)+'" target="_blank" rel="noopener">doi.org/'+esc(s.doi)+'</a>' : '');
+    const doiLink = s.doi ? '<a class="pdoi" href="https://doi.org/'+esc(s.doi)+'" target="_blank" rel="noopener">doi.org/'+esc(s.doi)+'<span class="arrow" aria-hidden="true">↗</span></a>' : '';
+    const paperFull = (s.fullTitle ? '<span class="ptitle">'+esc(s.fullTitle)+'</span>' : '') + doiLink;
+    const ownRows = RAW_LABELS.filter(([k])=>s.raw && s.raw[k]).map(([k,label])=>row(label, esc(s.raw[k]))).join("");
     const rows = row("Sample", sample) + row("Acquisition", esc(s.acquisition)) + row("Paper", paperFull)
       + (s.taskLabels ? '<div class="drow"><span class="dkey">BIDS task label</span><span class="dval mono">'+esc(s.taskLabels)+'</span></div>' : '')
-      + RAW_LABELS.filter(([k])=>s.raw && s.raw[k]).map(([k,label])=>row(label, esc(s.raw[k]))).join("");
+      + (ownRows ? '<div class="dgroup">As described by the data owner</div>'+ownRows : '');
     const panelId = "details-"+i;
     const details = rows
       ? '<button type="button" class="dtoggle" aria-expanded="false" aria-controls="'+panelId+'">Details<span class="chev" aria-hidden="true"></span></button>'
