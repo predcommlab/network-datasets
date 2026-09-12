@@ -252,7 +252,7 @@ const VALUES = {
 const RAW_LABELS = [
   ["paradigm","Task paradigm"], ["priorType","Type of prior"],
   ["priorInduction","Induction of prior"], ["predictability","Predictability"],
-  ["volatility","Volatility"], ["population","Sample"],
+  ["volatility","Volatility"], ["population","Population"],
   ["stimulus","Stimulus"], ["stimulusQuality","Stimulus quality"],
   ["signalLevel","Recording detail"], ["anatomicalScale","Anatomical scale"]
 ];
@@ -385,9 +385,9 @@ function render(){
       ? '<a href="'+esc(paperUrl)+'" target="_blank" rel="noopener"'+(s.fullTitle ? ' title="'+esc(s.fullTitle)+'"' : '')+'>'+(s.doi ? 'Paper' : 'Preprint')+'<span class="arrow" aria-hidden="true">↗</span></a>'
       : '';
 
-    // Details panel: sample and acquisition, the paper in full, the BIDS task
-    // label, and the owner's own wording for each label (the filters run on
-    // a normalised vocabulary; this is what they actually wrote).
+    // Details panel: sample size and acquisition, the paper in full, the BIDS
+    // task label, then the study design as the owner entered it in the
+    // catalogue (verbatim; the filters run on a normalised vocabulary).
     const unit = (v, word, already) =>
       !v ? "" : (already.test(v) ? v : v+" "+word+(v==="1" ? "" : "s"));
     const row = (k, v) => v ? '<div class="drow"><span class="dkey">'+k+'</span><span class="dval">'+v+'</span></div>' : '';
@@ -395,9 +395,9 @@ function render(){
     const doiLink = s.doi ? '<a class="pdoi" href="https://doi.org/'+esc(s.doi)+'" target="_blank" rel="noopener">doi.org/'+esc(s.doi)+'<span class="arrow" aria-hidden="true">↗</span></a>' : '';
     const paperFull = (s.fullTitle ? '<span class="ptitle">'+esc(s.fullTitle)+'</span>' : '') + doiLink;
     const ownRows = RAW_LABELS.filter(([k])=>s.raw && s.raw[k]).map(([k,label])=>row(label, esc(s.raw[k]))).join("");
-    const rows = row("Sample", sample) + row("Acquisition", esc(s.acquisition)) + row("Paper", paperFull)
+    const rows = row("Sample size", sample) + row("Acquisition", esc(s.acquisition)) + row("Paper", paperFull)
       + (s.taskLabels ? '<div class="drow"><span class="dkey">BIDS task label</span><span class="dval mono">'+esc(s.taskLabels)+'</span></div>' : '')
-      + (ownRows ? '<div class="dgroup">In the data owner\'s own words</div>'+ownRows : '');
+      + (ownRows ? '<div class="dgroup">Study design</div>'+ownRows : '');
     const panelId = "details-"+i;
     const details = rows
       ? '<button type="button" class="dtoggle" aria-expanded="false" aria-controls="'+panelId+'">Details<span class="chev" aria-hidden="true"></span></button>'
