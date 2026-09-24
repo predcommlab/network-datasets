@@ -145,7 +145,7 @@ const STUDIES = [
    num:"7",
    name:"Prediction-error & schema memory (Greve et al. 2018)",
    fullTitle:"Knowledge is power: prior knowledge aids memory for both congruent and incongruent events, but in different ways",
-   owner:"Andrea Greve (external)",
+   owner:"Andrea Greve",
    authors:"Greve, Cooper, Tibon & Henson",
    pi:"A. Greve / network (Helen co-lead)",
    institution:"MRC-CBU, Cambridge",
