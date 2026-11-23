@@ -387,9 +387,10 @@ function render(){
     const dataOut = s.repo
       ? '<a href="'+esc(s.repo)+'" target="_blank" rel="noopener">Data on '+esc(host(s.repo))+'<span class="arrow" aria-hidden="true">↗</span></a>'
       : '<span class="none">'+(s.published ? 'Data not publicly available' : 'Data will be shared after publication')+'</span>';
-    const paperUrl = s.doi ? 'https://doi.org/'+s.doi : (s.preprint || '');
+    // s.paperUrl: the catalogue gave a link to the paper instead of a DOI.
+    const paperUrl = s.doi ? 'https://doi.org/'+s.doi : (s.paperUrl || s.preprint || '');
     const paperOut = paperUrl
-      ? '<a href="'+esc(paperUrl)+'" target="_blank" rel="noopener"'+(s.fullTitle ? ' title="'+esc(s.fullTitle)+'"' : '')+'>'+(s.doi ? 'Paper' : 'Preprint')+'<span class="arrow" aria-hidden="true">↗</span></a>'
+      ? '<a href="'+esc(paperUrl)+'" target="_blank" rel="noopener"'+(s.fullTitle ? ' title="'+esc(s.fullTitle)+'"' : '')+'>'+(s.doi || s.paperUrl ? 'Paper' : 'Preprint')+'<span class="arrow" aria-hidden="true">↗</span></a>'
       : '';
 
     // Details panel: sample size and acquisition, the paper in full, the BIDS
@@ -399,8 +400,9 @@ function render(){
       !v ? "" : (already.test(v) ? v : v+" "+word+(v==="1" ? "" : "s"));
     const row = (k, v) => v ? '<div class="drow"><span class="dkey">'+k+'</span><span class="dval">'+v+'</span></div>' : '';
     const sample = [unit(s.nParticipants, "participant", /particip|subject|folder/i), unit(s.nSessions, "session", /session/i)].filter(Boolean).map(esc).join(", ");
-    const doiLink = s.doi ? '<a class="pdoi" href="https://doi.org/'+esc(s.doi)+'" target="_blank" rel="noopener">doi.org/'+esc(s.doi)+'<span class="arrow" aria-hidden="true">↗</span></a>' : '';
-    const paperFull = (s.fullTitle ? '<span class="ptitle">'+esc(s.fullTitle)+'</span>' : '') + doiLink;
+    const paperLink = s.doi ? '<a class="pdoi" href="https://doi.org/'+esc(s.doi)+'" target="_blank" rel="noopener">doi.org/'+esc(s.doi)+'<span class="arrow" aria-hidden="true">↗</span></a>'
+      : s.paperUrl ? '<a class="pdoi" href="'+esc(s.paperUrl)+'" target="_blank" rel="noopener">'+esc(s.paperUrl.replace(/^https?:\/\/(www\.)?/,""))+'<span class="arrow" aria-hidden="true">↗</span></a>' : '';
+    const paperFull = (s.fullTitle ? '<span class="ptitle">'+esc(s.fullTitle)+'</span>' : '') + paperLink;
     const ownRows = RAW_LABELS.filter(([k])=>s.raw && s.raw[k]).map(([k,label])=>row(label, esc(s.raw[k]))).join("");
     // The institution stays in the data but is not shown: with several authors
     // from several places it has no single meaning on a card (decided 2026-09-12).
