@@ -1,0 +1,63 @@
+{
+  "name": "Expectation suppression and statistical learning",
+  "paperTitle": "Dissociable dynamic effects of expectation during statistical learning",
+  "authors": "Hannah H McDermott, Federico de Martino, Caspar M Schwiedrzik & Ryszard Auksztulewicz",
+  "correspondingAuthor": "Hannah McDermott",
+  "published": true,
+  "paper": "https://elifesciences.org/articles/103689",
+  "dataUrl": "https://osf.io/x7ydf/",
+  "participants": "30",
+  "added": "2026-11-23",
+  "labels": {
+    "species": [
+      "Human"
+    ],
+    "population": [
+      "Healthy"
+    ],
+    "taskRelevance": [
+      "Task-irrelevant"
+    ],
+    "priorType": [
+      "Cue"
+    ],
+    "priorInduction": [
+      "Implicit"
+    ],
+    "predictability": [
+      "Probabilistic / stochastic"
+    ],
+    "volatility": [
+      "Low"
+    ],
+    "modality": [
+      "Visual"
+    ],
+    "stimulus": [
+      "Natural images"
+    ],
+    "stimulusQuality": [
+      "Distinct"
+    ],
+    "technique": [
+      "Behavioural responses",
+      "EEG"
+    ],
+    "anatomicalScale": [
+      "Whole-brain"
+    ]
+  },
+  "descriptions": {
+    "species": "Human",
+    "population": "Healthy",
+    "priorType": "Cue",
+    "priorInduction": "Implicit",
+    "predictability": "Probabilistic / stochastic",
+    "volatility": "Low",
+    "modality": "Visual",
+    "stimulus": "Natural images",
+    "stimulusQuality": "Distinct",
+    "technique": "Behavioural responses, EEG",
+    "anatomicalScale": "Whole-brain"
+  }
+}

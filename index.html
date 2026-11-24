@@ -2,16 +2,19 @@
 <!--
   PredictIndex, the network dataset index
 
-  Self-contained: double-click to open in a browser. No server needed.
+  Self-contained: once studies.js has been built, double-click to open it in
+  a browser. No server needed.
 
-  HOW TO MAINTAIN:
-  - Dataset data is in studies.js, generated from the study catalogue by
-    projects/network_data_hub/build_studies.py. Do not hand-edit it.
-  - Each study can carry several values per facet (arrays), e.g.
+  HOW IT IS MAINTAINED:
+  - The data is in options.json (the label options of every category, the
+    only place they are written down) and in studies/ (one file per study).
+    studies.js, which this page reads (OPTIONS and STUDIES), is generated
+    from them by .github/scripts/predictindex.py build. Do not edit it.
+  - Each study can carry several labels per category, e.g.
     technique: ["EEG", "Behavioural responses"].
-  - FACETS lists every filter. A facet only appears in the sidebar once at
-    least one study has a value for it, so the filters fill in as the
-    catalogue is completed.
+  - The filters are Status and Corresponding author, then the categories of
+    options.json in their order; a category marked "filter": false is shown
+    in Details only.
   - The search text and the selected filters are mirrored in the URL
     (?q=...&technique=EEG), so a filtered view can be linked to.
   - Colours, type and card language follow the lab website (blanklab.eu);
@@ -83,6 +86,10 @@
   .search:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-tint)}
   .search:focus-visible{outline:none}
   .count{font-size:12px;color:var(--quiet);white-space:nowrap}
+  /* Download table: a quiet outlined button after the count. */
+  .download{flex:none;display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;font:inherit;font-size:13px;color:var(--accent);background:#fff;border:1px solid var(--card-line);border-radius:8px;cursor:pointer;white-space:nowrap}
+  .download:hover{background:var(--accent-tint);border-color:var(--accent-weak)}
+  .download:disabled{color:var(--quiet);background:#fff;border-color:var(--line);cursor:default}
 
   /* Active filter chips: real buttons, one click removes the filter. */
   .active{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
@@ -115,6 +122,7 @@
   .opt{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink);padding:4px 0;cursor:pointer}
   .opt:hover input{border-color:var(--accent)}
   .opt.empty{color:var(--quiet)}
+  .opt.sub{padding-left:26px}
   .opt .cnt{margin-left:auto;color:var(--quiet);font-size:12px;font-variant-numeric:tabular-nums}
   .opt input{-webkit-appearance:none;appearance:none;flex:none;width:16px;height:16px;margin:0;border:1.5px solid #b9c2cf;border-radius:4px;background:#fff;cursor:pointer;display:grid;place-content:center}
   .opt input::before{content:"";width:9px;height:5px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(1px,-1px);opacity:0}
@@ -167,6 +175,9 @@
   }
   @media (max-width:760px){
     .wrap{padding-top:24px}
+    .topbar{flex-wrap:wrap;row-gap:10px}
+    .search{flex:1 1 100%}
+    .count{margin-right:auto}
     .layout{flex-direction:column}
     .filters-toggle{display:inline-flex}
     .filters{width:100%;display:none}
@@ -193,6 +204,7 @@
     <label for="q" class="sr-only">Search datasets</label>
     <input id="q" class="search" type="search" placeholder="Search datasets, authors…" autocomplete="off" spellcheck="false">
     <span id="count" class="count" aria-live="polite"></span>
+    <button id="download" type="button" class="download" title="Download the datasets shown as an Excel table"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.5v7.5"/><polyline points="4.5,6.8 8,10.3 11.5,6.8"/><path d="M3 13.5h10"/></svg>Download table</button>
   </div>
   <div id="active" class="active"></div>
 
@@ -219,50 +231,29 @@
 
 <script src="studies.js"></script>
 <script>
-// Predictability is not offered as a filter: the catalogue answers describe
-// volatility ("constant", "equal") rather than predictability. The owner's
-// wording still shows under "Study details" on each card.
+// The filters: Status and Corresponding author come from the studies
+// themselves; after them, every category of options.json (OPTIONS, in
+// studies.js) in its order, except those marked filter: false, which are
+// shown in Details only (Predictability: the owners' answers describe
+// volatility rather than predictability).
 const FACETS = [
   {key:"status", label:"Status"},
-  {key:"owner", label:"Corresponding author"},
-  {key:"species", label:"Species"},
-  {key:"population", label:"Population"},
-  {key:"paradigm", label:"Task paradigm"},
-  {key:"activePassive", label:"Active vs. passive"},
-  {key:"priorType", label:"Type of prior"},
-  {key:"priorInduction", label:"Induction of prior"},
-  {key:"volatility", label:"Volatility"},
-  {key:"modality", label:"Sensory modality"},
-  {key:"stimulus", label:"Stimulus properties"},
-  {key:"stimulusQuality", label:"Stimulus quality"},
-  {key:"technique", label:"Recording technique"},
-  {key:"anatomicalScale", label:"Anatomical scale"}
-];
+  {key:"owner", label:"Corresponding author"}
+].concat(OPTIONS.categories.filter(c=>c.filter!==false).map(c=>({key:c.key, label:c.label})));
 
-const VALUES = {
-  status: ["Published","Not yet published"],
-  species: ["Human","Macaque","Mouse","Rat","Simulated data"],
-  population: ["Healthy","Clinical"],
-  paradigm: ["Oddball","Serial task","Recognition","Memory","Detection","Discrimination","Rating","Prediction","Decision-making"],
-  activePassive: ["Active","Passive"],
-  priorType: ["Cue","Sequence","Natural environment"],
-  priorInduction: ["Implicit","Explicit","Naturalistic / long-term","Artificial / long-term"],
-  volatility: ["High","Low"],
-  modality: ["Auditory","Visual","Somatosensory","Cross-modal"],
-  stimulus: ["Simple tones","Natural sounds","Gabor patches","Natural images","Faces","Speech","Written text"],
-  stimulusQuality: ["Distinct","Noisy","Ambiguous"],
-  technique: ["Reaction times","Behavioural responses","Eye-tracking","Pupillometry","EEG","MEG","fMRI","fNIRS","ECoG","Single-unit","TMS"],
-  anatomicalScale: ["Whole-brain","Region of interest (ROI)","Laminar / layer-specific"]
-};
+const VALUES = {status: ["Published","Not yet published"]};
+OPTIONS.categories.forEach(c=>{ VALUES[c.key] = c.options; });
 
-// Labels shown inside a card's "Study details", in the owner's own wording.
-const RAW_LABELS = [
-  ["paradigm","Task paradigm"], ["priorType","Type of prior"],
-  ["priorInduction","Induction of prior"], ["predictability","Predictability"],
-  ["volatility","Volatility"], ["population","Population"],
-  ["stimulus","Stimulus"], ["stimulusQuality","Stimulus quality"],
-  ["signalLevel","Recording detail"], ["anatomicalScale","Anatomical scale"]
-];
+// How an option reads in the filters and chips where that differs from its
+// value; the value stays what the URL carries (?status=Published, the link
+// the symposium page uses). Preprints count as published.
+const SHOWN = {status: {"Published": "Published (and preprints)"}};
+
+// Categories not listed under Study design in a card's Details: technique
+// and modality are the card's tags, and species has never been listed there.
+// Every other category is listed, in the order of options.json, in the
+// owner's own words where there are any, otherwise as its labels.
+const NOT_IN_DETAILS = ["species","modality","technique"];
 
 const ESC = {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"};
 function esc(v){ return String(v==null?"":v).replace(/[&<>"']/g, c=>ESC[c]); }
@@ -270,9 +261,22 @@ const $ = id => document.getElementById(id);
 
 function valuesOf(s, key){
   if(key==="status") return [s.published ? "Published" : "Not yet published"];
-  if(key==="owner") return s.owner ? [s.owner] : [];
-  return s[key] || [];
+  if(key==="owner") return s.correspondingAuthor ? [s.correspondingAuthor] : [];
+  return (s.labels && s.labels[key]) || [];
 }
+
+// A colon makes a sub-option: "Clinical: autism" is listed under Clinical.
+// Clinical itself is an option of the filter that stands for all of its
+// sub-options; they appear once it is ticked, and ticking one narrows
+// Clinical down to it.
+function parentOf(v){ const i = String(v).indexOf(": "); return i > 0 ? v.slice(0, i) : null; }
+function subLabel(v){ const t = v.slice(v.indexOf(": ")+2); return t.charAt(0).toUpperCase()+t.slice(1); }
+function shown(key, v){ return (SHOWN[key] && SHOWN[key][v]) || v; }
+function withParents(s, key){
+  const vals = valuesOf(s, key);
+  return vals.concat(vals.map(parentOf).filter(p=>p && !vals.includes(p)));
+}
+function statusOf(s){ return s.published ? (s.preprint ? "Preprint" : "Published") : "Not yet published"; }
 
 const sel = {}; FACETS.forEach(f=>sel[f.key]=new Set());
 const openState = {}; FACETS.forEach(f=>openState[f.key]=["status","owner","technique","modality"].includes(f.key));
@@ -295,28 +299,38 @@ function writeState(){
   history.replaceState(null, "", qs ? "?"+qs : location.pathname);
 }
 
+// The options of one filter, in order, each with its number of studies:
+// [{value, label, count, parent}], a parent (such as Clinical) listed just
+// before its first sub-option.
 function facetValues(key){
   const counts = new Map();
-  STUDIES.forEach(s=>valuesOf(s,key).forEach(v=>counts.set(v,(counts.get(v)||0)+1)));
-  let opts;
-  if(VALUES[key]){
-    opts = VALUES[key].slice();
-    [...counts.keys()].forEach(v=>{ if(!opts.includes(v)) opts.push(v); });
-  } else {
-    opts = [...counts.keys()].sort((a,b)=> String(a)<String(b) ? -1 : 1);
-  }
-  return opts.map(v=>[v, counts.get(v)||0]);
+  STUDIES.forEach(s=>withParents(s,key).forEach(v=>counts.set(v,(counts.get(v)||0)+1)));
+  const opts = VALUES[key] ? VALUES[key].slice() : [...counts.keys()].sort((a,b)=> String(a)<String(b) ? -1 : 1);
+  [...counts.keys()].forEach(v=>{ if(!opts.includes(v) && !opts.some(o=>parentOf(o)===v)) opts.push(v); });
+  const out = [];
+  opts.forEach(v=>{
+    const p = parentOf(v);
+    if(p && !out.some(e=>e.value===p)) out.push({value:p, label:p, count:counts.get(p)||0, parent:null});
+    if(!out.some(e=>e.value===v)) out.push({value:v, label:p ? subLabel(v) : shown(key, v), count:counts.get(v)||0, parent:p});
+  });
+  return out;
+}
+// The ticked options of a filter that decide: a parent counts only while
+// none of its sub-options is ticked.
+function deciding(key){
+  const want = [...sel[key]];
+  return want.filter(v=>!want.some(w=>parentOf(w)===v));
 }
 function matches(s){
   if(q){
-    const hay = [s.name, s.fullTitle, s.authors, s.owner, s.acquisition,
-                 s.taskLabels].concat(Object.values(s.raw||{})).join(" ").toLowerCase();
+    const hay = [s.name, s.paperTitle, s.authors, s.correspondingAuthor, s.acquisition,
+                 s.bidsTaskLabels].concat(Object.values(s.descriptions||{})).join(" ").toLowerCase();
     if(!hay.includes(q)) return false;
   }
   for(const f of FACETS){
-    const want = sel[f.key];
-    if(want.size===0) continue;
-    if(!valuesOf(s,f.key).some(v=>want.has(v))) return false;
+    if(sel[f.key].size===0) continue;
+    const have = withParents(s, f.key);
+    if(!deciding(f.key).some(v=>have.includes(v))) return false;
   }
   return true;
 }
@@ -336,11 +350,16 @@ function renderFilters(){
     box.appendChild(h);
     if(openState[f.key]){
       const list = document.createElement("div"); list.className = "vals"; list.id = "vals-"+f.key;
-      vals.forEach(([v,c])=>{
-        const row = document.createElement("label"); row.className = "opt" + (c===0 ? " empty" : "");
+      vals.forEach(({value:v, label, count:c, parent})=>{
+        if(parent && !sel[f.key].has(parent)) return;   // sub-options show once their parent is ticked
+        const row = document.createElement("label"); row.className = "opt" + (parent ? " sub" : "") + (c===0 ? " empty" : "");
         const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = sel[f.key].has(v);
-        cb.onchange = ()=>{ cb.checked ? sel[f.key].add(v) : sel[f.key].delete(v); render(); };
-        const txt = document.createElement("span"); txt.textContent = v;
+        cb.onchange = ()=>{
+          if(cb.checked) sel[f.key].add(v);
+          else { sel[f.key].delete(v); [...sel[f.key]].forEach(w=>{ if(parentOf(w)===v) sel[f.key].delete(w); }); }
+          render();
+        };
+        const txt = document.createElement("span"); txt.textContent = label;
         row.appendChild(cb); row.appendChild(txt);
         if(c>0){ const cnt = document.createElement("span"); cnt.className = "cnt"; cnt.textContent = c; row.appendChild(cnt); }
         list.appendChild(row);
@@ -358,9 +377,9 @@ function renderActive(){
   FACETS.forEach(f=> sel[f.key].forEach(v=>{
     any = true;
     const chip = document.createElement("button"); chip.type = "button"; chip.className = "chip";
-    chip.setAttribute("aria-label", "Remove filter: "+v);
-    chip.innerHTML = esc(v)+' <span aria-hidden="true">✕</span>';
-    chip.onclick = ()=>{ sel[f.key].delete(v); render(); };
+    chip.setAttribute("aria-label", "Remove filter: "+shown(f.key, v));
+    chip.innerHTML = esc(shown(f.key, v))+' <span aria-hidden="true">✕</span>';
+    chip.onclick = ()=>{ sel[f.key].delete(v); [...sel[f.key]].forEach(w=>{ if(parentOf(w)===v) sel[f.key].delete(w); }); render(); };
     el.appendChild(chip);
   }));
   if(any){
@@ -369,54 +388,57 @@ function renderActive(){
     el.appendChild(clr);
   }
 }
+let listed = [];   // the studies shown now, for the table
 function render(){
   renderFilters(); renderActive(); writeState();
   const res = $("cards"); res.innerHTML = "";
-  let n = 0;
+  listed = STUDIES.filter(matches);
+  const n = listed.length;
   STUDIES.forEach((s, i)=>{
-    if(!matches(s)) return; n++;
-    const tags = (s.technique||[]).concat(s.modality||[])
+    if(!matches(s)) return;
+    const tags = valuesOf(s, "technique").concat(valuesOf(s, "modality"))
       .map(t=>'<span class="tag">'+esc(t)+'</span>').join("");
 
-    // Row 2: the people, then the institution.
-    const who = '<p class="who"><b>'+esc(s.authors || s.owner)+'</b></p>';
+    // Row 2: the people.
+    const who = '<p class="who"><b>'+esc(s.authors || s.correspondingAuthor)+'</b></p>';
 
     // Row 4: where the data and the paper are. Nothing links out unless the
-    // owner marked the study published; the others say so in plain words.
+    // study is published (the build refuses links on any other); the others
+    // say so in plain words.
     const host = u => { try { return new URL(u).hostname.replace(/^www\./,""); } catch(e){ return u; } };
-    const dataOut = s.repo
-      ? '<a href="'+esc(s.repo)+'" target="_blank" rel="noopener">Data on '+esc(host(s.repo))+'<span class="arrow" aria-hidden="true">↗</span></a>'
+    const dataOut = s.dataUrl
+      ? '<a href="'+esc(s.dataUrl)+'" target="_blank" rel="noopener">Data on '+esc(host(s.dataUrl))+'<span class="arrow" aria-hidden="true">↗</span></a>'
       : '<span class="none">'+(s.published ? 'Data not publicly available' : 'Data will be shared after publication')+'</span>';
-    // s.paperUrl: the catalogue gave a link to the paper instead of a DOI.
-    const paperUrl = s.doi ? 'https://doi.org/'+s.doi : (s.paperUrl || s.preprint || '');
-    const paperOut = paperUrl
-      ? '<a href="'+esc(paperUrl)+'" target="_blank" rel="noopener"'+(s.fullTitle ? ' title="'+esc(s.fullTitle)+'"' : '')+'>'+(s.doi || s.paperUrl ? 'Paper' : 'Preprint')+'<span class="arrow" aria-hidden="true">↗</span></a>'
+    // s.paperLink: https://doi.org/<DOI> when the paper is given as a DOI,
+    // otherwise the link given; s.preprint: it is on a preprint server.
+    const paperOut = s.paperLink
+      ? '<a href="'+esc(s.paperLink)+'" target="_blank" rel="noopener"'+(s.paperTitle ? ' title="'+esc(s.paperTitle)+'"' : '')+'>'+(s.preprint ? 'Preprint' : 'Paper')+'<span class="arrow" aria-hidden="true">↗</span></a>'
       : '';
 
     // Details panel: sample size and acquisition, the paper in full, the BIDS
-    // task label, then the study design as the owner entered it in the
-    // catalogue (verbatim; the filters run on a normalised vocabulary).
+    // task label, then the study design: each category in the owner's own
+    // words where there are any, otherwise as its labels.
     const unit = (v, word, already) =>
       !v ? "" : (already.test(v) ? v : v+" "+word+(v==="1" ? "" : "s"));
     const row = (k, v) => v ? '<div class="drow"><span class="dkey">'+k+'</span><span class="dval">'+v+'</span></div>' : '';
-    const sample = [unit(s.nParticipants, "participant", /particip|subject|folder/i), unit(s.nSessions, "session", /session/i)].filter(Boolean).map(esc).join(", ");
-    const paperLink = s.doi ? '<a class="pdoi" href="https://doi.org/'+esc(s.doi)+'" target="_blank" rel="noopener">doi.org/'+esc(s.doi)+'<span class="arrow" aria-hidden="true">↗</span></a>'
-      : s.paperUrl ? '<a class="pdoi" href="'+esc(s.paperUrl)+'" target="_blank" rel="noopener">'+esc(s.paperUrl.replace(/^https?:\/\/(www\.)?/,""))+'<span class="arrow" aria-hidden="true">↗</span></a>' : '';
-    const paperFull = (s.fullTitle ? '<span class="ptitle">'+esc(s.fullTitle)+'</span>' : '') + paperLink;
-    const ownRows = RAW_LABELS.filter(([k])=>s.raw && s.raw[k]).map(([k,label])=>row(label, esc(s.raw[k]))).join("");
-    // The institution stays in the data but is not shown: with several authors
-    // from several places it has no single meaning on a card (decided 2026-09-12).
+    const sample = [unit(s.participants, "participant", /particip|subject|folder/i), unit(s.sessions, "session", /session/i)].filter(Boolean).map(esc).join(", ");
+    const paperLink = s.paperDoi ? '<a class="pdoi" href="'+esc(s.paperLink)+'" target="_blank" rel="noopener">doi.org/'+esc(s.paperDoi)+'<span class="arrow" aria-hidden="true">↗</span></a>'
+      : s.paperLink ? '<a class="pdoi" href="'+esc(s.paperLink)+'" target="_blank" rel="noopener">'+esc(s.paperLink.replace(/^https?:\/\/(www\.)?/,""))+'<span class="arrow" aria-hidden="true">↗</span></a>' : '';
+    const paperFull = (s.paperTitle ? '<span class="ptitle">'+esc(s.paperTitle)+'</span>' : '') + paperLink;
+    const designRows = OPTIONS.categories.filter(c=>!NOT_IN_DETAILS.includes(c.key)).map(c=>
+      row(esc(c.label), esc((s.descriptions||{})[c.key] || valuesOf(s, c.key).join(", ")))).join("");
     const rows = row("Sample size", sample) + row("Acquisition", esc(s.acquisition)) + row("Paper", paperFull)
-      + (s.taskLabels ? '<div class="drow"><span class="dkey">BIDS task label</span><span class="dval mono">'+esc(s.taskLabels)+'</span></div>' : '')
-      + (ownRows ? '<div class="dgroup">Study design</div>'+ownRows : '');
+      + (s.bidsTaskLabels ? '<div class="drow"><span class="dkey">BIDS task label</span><span class="dval mono">'+esc(s.bidsTaskLabels)+'</span></div>' : '')
+      + (designRows ? '<div class="dgroup">Study design</div>'+designRows : '');
     const panelId = "details-"+i;
     const details = rows
       ? '<button type="button" class="dtoggle" aria-expanded="false" aria-controls="'+panelId+'">Details<span class="chev" aria-hidden="true"></span></button>'
       : '';
     const panel = rows ? '<div class="dbody" id="'+panelId+'" hidden>'+rows+'</div>' : '';
 
+    // Published, or Preprint when the paper is on a preprint server.
     const status = s.published
-      ? '<span class="pub">Published</span>'
+      ? '<span class="pub">'+statusOf(s)+'</span>'
       : '<span class="unpub">Not yet published</span>';
     const card = document.createElement("article"); card.className = "card";
     card.innerHTML =
@@ -431,9 +453,128 @@ function render(){
   });
   $("count").textContent = n+" of "+STUDIES.length+" datasets";
   $("empty").hidden = n > 0;
+  $("download").disabled = n === 0;
+}
+
+// Download table: the studies shown (search and filters applied) as an Excel
+// file, made here in the browser. Sheet "Datasets": one row per study, the
+// labels of each category in one column; the paper and data links can be
+// clicked. Sheet "About": where and when the table was made, and with which
+// search and filters. An .xlsx file is a zip of a few XML files; Excel in any
+// language setting, Numbers, LibreOffice and Google Sheets open it, while a
+// comma-separated file ends up in one column in German Excel.
+function downloadTable(){
+  const pad = d => String(d).padStart(2, "0"), now = new Date();
+  const today = now.getFullYear()+"-"+pad(now.getMonth()+1)+"-"+pad(now.getDate());
+  const cats = OPTIONS.categories;
+  const head = ["Study","Paper title","Authors","Corresponding author","Status","Paper","Data","Participants",
+                "Sessions","Acquisition"].concat(cats.map(c=>c.label));
+  const rows = listed.map(s=>[s.name, s.paperTitle, s.authors, s.correspondingAuthor, statusOf(s), s.paperLink,
+    s.dataUrl, s.participants, s.sessions, s.acquisition].concat(cats.map(c=>valuesOf(s, c.key).join(", "))));
+  const filters = FACETS.filter(f=>sel[f.key].size).map(f=>f.label+": "+[...sel[f.key]].map(v=>shown(f.key, v)).join(", "));
+  const about = [
+    ["PredictIndex", "A Searchable Directory of Predictive Processing Studies and Datasets"],
+    ["Source", location.href],
+    ["Downloaded", today],
+    ["Datasets", $("count").textContent],
+    ["Search", $("q").value.trim() || "none"],
+    ["Filters", filters.join("; ") || "none"],
+    ["Note", "We thank the authors who have shared their datasets here. Each dataset remains their own work."]];
+  const blob = xlsx([
+    {name:"Datasets", rows:[head].concat(rows), header:true, links:[5, 6],
+     widths:[44, 50, 40, 24, 18, 38, 30, 14, 10, 28].concat(cats.map(()=>22))},
+    {name:"About", rows:about, header:false, links:[1], widths:[16, 100]}]);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "PredictIndex_"+today+".xlsx";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+}
+
+// A minimal .xlsx writer: sheets of text cells (inline strings), a bold and
+// frozen first row with filter buttons where `header` is set, links in the
+// columns listed in `links`.
+function xlsx(sheets){
+  const x = v => String(v).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F￾￿]/g, "")
+    .replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const col = n => { let s = ""; for(n++; n > 0; n = Math.floor((n-1)/26)) s = String.fromCharCode(65+(n-1)%26)+s; return s; };
+  const XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+  const MAIN = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
+  const RELS = 'xmlns="http://schemas.openxmlformats.org/package/2006/relationships"';
+  const REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/";
+  const files = [], names = [];
+  sheets.forEach((sh, i)=>{
+    const links = [], width = Math.max(...sh.rows.map(r=>r.length));
+    const range = "A1:"+col(width-1)+sh.rows.length;
+    const data = sh.rows.map((r, ri)=>'<row r="'+(ri+1)+'">'+r.map((v, ci)=>{
+      if(v == null || v === "") return "";
+      const ref = col(ci)+(ri+1);
+      if(sh.links.includes(ci) && /^https?:\/\/\S+$/.test(v) && !(sh.header && ri === 0)) links.push([ref, v]);
+      return '<c r="'+ref+'" t="inlineStr"'+(sh.header && ri === 0 ? ' s="1"' : '')+'><is><t xml:space="preserve">'+x(v)+'</t></is></c>';
+    }).join("")+'</row>').join("");
+    files.push(["xl/worksheets/sheet"+(i+1)+".xml", XML+'<worksheet '+MAIN+'><sheetViews><sheetView workbookViewId="0"'+(i === 0 ? ' tabSelected="1"' : '')+'>'
+      +(sh.header ? '<pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/>' : '')+'</sheetView></sheetViews>'
+      +'<cols>'+sh.widths.map((w, ci)=>'<col min="'+(ci+1)+'" max="'+(ci+1)+'" width="'+w+'" customWidth="1"/>').join("")+'</cols>'
+      +'<sheetData>'+data+'</sheetData>'
+      +(sh.header ? '<autoFilter ref="'+range+'"/>' : '')
+      +(links.length ? '<hyperlinks>'+links.map(([ref], k)=>'<hyperlink ref="'+ref+'" r:id="rId'+(k+1)+'"/>').join("")+'</hyperlinks>' : '')
+      +'</worksheet>']);
+    if(links.length) files.push(["xl/worksheets/_rels/sheet"+(i+1)+".xml.rels", XML+'<Relationships '+RELS+'>'
+      +links.map(([, url], k)=>'<Relationship Id="rId'+(k+1)+'" Type="'+REL+'hyperlink" Target="'+x(url)+'" TargetMode="External"/>').join("")+'</Relationships>']);
+    names.push([sh.name, sh.header ? "'"+sh.name+"'!$"+range.replace(":", ":$").replace(/([A-Z]+)(\d+)/g, "$1$$$2") : null]);
+  });
+  files.push(["xl/workbook.xml", XML+'<workbook '+MAIN+'><bookViews><workbookView/></bookViews><sheets>'
+    +names.map(([n], i)=>'<sheet name="'+x(n)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>').join("")+'</sheets>'
+    +'<definedNames>'+names.map(([, r], i)=>r ? '<definedName name="_xlnm._FilterDatabase" localSheetId="'+i+'" hidden="1">'+x(r)+'</definedName>' : '').join("")+'</definedNames>'
+    +'</workbook>']);
+  files.push(["xl/_rels/workbook.xml.rels", XML+'<Relationships '+RELS+'>'
+    +names.map((_, i)=>'<Relationship Id="rId'+(i+1)+'" Type="'+REL+'worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>').join("")
+    +'<Relationship Id="rId'+(names.length+1)+'" Type="'+REL+'styles" Target="styles.xml"/></Relationships>']);
+  files.push(["xl/styles.xml", XML+'<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+    +'<fonts count="2"><font><sz val="11"/><name val="Calibri"/><family val="2"/></font><font><b/><sz val="11"/><name val="Calibri"/><family val="2"/></font></fonts>'
+    +'<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>'
+    +'<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
+    +'<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+    +'<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs>'
+    +'<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>']);
+  files.push(["_rels/.rels", XML+'<Relationships '+RELS+'><Relationship Id="rId1" Type="'+REL+'officeDocument" Target="xl/workbook.xml"/></Relationships>']);
+  files.push(["[Content_Types].xml", XML+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+    +'<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>'
+    +'<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+    +names.map((_, i)=>'<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join("")
+    +'<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>']);
+  return zip(files.reverse());
+}
+
+// A zip archive of uncompressed files, as an .xlsx file needs it.
+const CRC = (()=>{ const t = new Uint32Array(256); for(let n = 0; n < 256; n++){ let c = n; for(let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function zip(files){
+  const enc = new TextEncoder(), parts = [], dir = [];
+  const now = new Date(), time = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+  const date = ((now.getFullYear()-1980) << 9) | ((now.getMonth()+1) << 5) | now.getDate();
+  let offset = 0;
+  files.forEach(([name, text])=>{
+    const nm = enc.encode(name), data = enc.encode(text);
+    let c = 0xFFFFFFFF; for(const b of data) c = CRC[(c ^ b) & 255] ^ (c >>> 8); const crc = (c ^ 0xFFFFFFFF) >>> 0;
+    const head = (sig, central)=>{
+      const v = new DataView(new ArrayBuffer(central ? 46 : 30)); let p = 0;
+      const u16 = n => { v.setUint16(p, n, true); p += 2; }, u32 = n => { v.setUint32(p, n, true); p += 4; };
+      u32(sig); if(central) u16(20); u16(20); u16(0x0800); u16(0); u16(time); u16(date); u32(crc); u32(data.length); u32(data.length); u16(nm.length); u16(0);
+      if(central){ u16(0); u16(0); u16(0); u32(0); u32(offset); }
+      return new Uint8Array(v.buffer);
+    };
+    parts.push(head(0x04034b50, false), nm, data);
+    dir.push(head(0x02014b50, true), nm);
+    offset += 30 + nm.length + data.length;
+  });
+  const size = dir.reduce((n, p)=>n+p.length, 0), end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+  end.setUint32(12, size, true); end.setUint32(16, offset, true);
+  return new Blob(parts.concat(dir, [new Uint8Array(end.buffer)]), {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
 }
 
 $("q").addEventListener("input", e=>{ q = e.target.value.trim().toLowerCase(); render(); });
+$("download").addEventListener("click", downloadTable);
 $("emptyClear").addEventListener("click", ()=>{ $("q").value = ""; q = ""; FACETS.forEach(f=>sel[f.key].clear()); render(); $("q").focus(); });
 $("expandAll").addEventListener("click", ()=>{ FACETS.forEach(f=>openState[f.key]=true); renderFilters(); });
 $("collapseAll").addEventListener("click", ()=>{ FACETS.forEach(f=>openState[f.key]=false); renderFilters(); });

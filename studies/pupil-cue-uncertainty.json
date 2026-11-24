@@ -1,0 +1,66 @@
+{
+  "name": "Pupil, cue uncertainty & outcome surprise",
+  "paperTitle": "The pupil dilation response as an indicator of visual cue uncertainty and auditory outcome surprise",
+  "authors": "Janika Becker, Marvin Viertler, Christoph Korn & Helen Blank",
+  "correspondingAuthor": "Janika Becker",
+  "published": true,
+  "paper": "10.1111/ejn.16306",
+  "dataUrl": "https://osf.io/kq9w4/",
+  "participants": "27",
+  "sessions": "1",
+  "acquisition": "SR Research Eyelink 1000",
+  "added": "2026-09-12",
+  "labels": {
+    "species": [
+      "Human"
+    ],
+    "population": [
+      "Healthy"
+    ],
+    "taskRelevance": [
+      "Task-relevant"
+    ],
+    "priorType": [
+      "Cue"
+    ],
+    "priorInduction": [
+      "Explicit",
+      "Implicit"
+    ],
+    "predictability": [
+      "Probabilistic / stochastic"
+    ],
+    "volatility": [
+      "Low"
+    ],
+    "modality": [
+      "Visual",
+      "Auditory",
+      "Cross-modal"
+    ],
+    "stimulus": [
+      "Faces",
+      "Speech"
+    ],
+    "stimulusQuality": [
+      "Noisy (degraded)"
+    ],
+    "technique": [
+      "Pupillometry",
+      "Behavioural responses"
+    ]
+  },
+  "descriptions": {
+    "species": "human",
+    "population": "healthy",
+    "paradigm": "predicting auditory vowel outcomes from probabilistic face cues",
+    "priorType": "probabilistic cue-outcome contingencies",
+    "priorInduction": "explicit + learn contingencies online",
+    "predictability": "probabilistic",
+    "volatility": "no volatility",
+    "modality": "visual / auditory",
+    "stimulus": "faces + recorded spoken vowels",
+    "stimulusQuality": "noise-vocoded but intelligible",
+    "technique": "pupillometry, behavioural logs"
+  }
+}

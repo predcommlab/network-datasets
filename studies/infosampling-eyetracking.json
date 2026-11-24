@@ -1,0 +1,67 @@
+{
+  "name": "Adaptive Information Sampling Under Uncertainty",
+  "paperTitle": "Adaptive Information Sampling Under Uncertainty: A Multi-Level Investigation of Predictive Gaze Control",
+  "authors": "Henrik Eichhorn & Helen Blank",
+  "correspondingAuthor": "Henrik Eichhorn",
+  "published": false,
+  "participants": "35",
+  "sessions": "1",
+  "acquisition": "SR Research EyeLink CL v5.51.54440",
+  "bidsTaskLabels": "task-information_sampling",
+  "added": "2026-09-12",
+  "labels": {
+    "species": [
+      "Human"
+    ],
+    "population": [
+      "Healthy"
+    ],
+    "paradigm": [
+      "Recognition"
+    ],
+    "taskRelevance": [
+      "Task-relevant"
+    ],
+    "priorType": [
+      "Cue",
+      "Sequence"
+    ],
+    "priorInduction": [
+      "Implicit"
+    ],
+    "predictability": [
+      "Probabilistic / stochastic"
+    ],
+    "volatility": [
+      "High"
+    ],
+    "modality": [
+      "Visual"
+    ],
+    "stimulus": [
+      "Faces"
+    ],
+    "stimulusQuality": [
+      "Distinct"
+    ],
+    "technique": [
+      "Reaction times",
+      "Behavioural responses",
+      "Eye-tracking"
+    ]
+  },
+  "descriptions": {
+    "species": "human",
+    "population": "healthy",
+    "paradigm": "recognition",
+    "priorType": "cue, sequence",
+    "priorInduction": "implicit learning",
+    "predictability": "probabilistic",
+    "volatility": "high",
+    "modality": "visual",
+    "stimulus": "faces",
+    "stimulusQuality": "distinct",
+    "technique": "reaction times, behavioral responses, eye-tracking",
+    "anatomicalScale": "oculomotor system"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "name": "Sensory sharpening & semantic prediction errors",
+  "paperTitle": "Sensory sharpening and semantic prediction errors unify competing models of predictive processing in human speech comprehension",
+  "authors": "Fabian Schneider & Helen Blank",
+  "correspondingAuthor": "Fabian Schneider",
+  "published": true,
+  "paper": "10.1371/journal.pbio.3003588",
+  "dataUrl": "https://osf.io/snxqm/",
+  "participants": "36",
+  "sessions": "1",
+  "acquisition": "BrainVision, PsychoPy",
+  "bidsTaskLabels": "task-clear, task-narrative, task-morphed, task-vocoded",
+  "added": "2026-09-12",
+  "labels": {
+    "species": [
+      "Human"
+    ],
+    "population": [
+      "Healthy"
+    ],
+    "taskRelevance": [
+      "Task-relevant"
+    ],
+    "priorType": [
+      "Cue"
+    ],
+    "priorInduction": [
+      "Explicit"
+    ],
+    "volatility": [
+      "Low"
+    ],
+    "modality": [
+      "Auditory",
+      "Visual",
+      "Cross-modal"
+    ],
+    "stimulus": [
+      "Speech"
+    ],
+    "stimulusQuality": [
+      "Noisy (degraded)",
+      "Ambiguous (e.g. morphed)"
+    ],
+    "technique": [
+      "EEG",
+      "Behavioural responses"
+    ]
+  },
+  "descriptions": {
+    "species": "human",
+    "population": "healthy",
+    "paradigm": "predicting auditory words from visual/semantic cues",
+    "priorType": "visual/semantic speaker prior",
+    "priorInduction": "explicit",
+    "predictability": "equal",
+    "volatility": "no volatility",
+    "modality": "auditory, visual",
+    "stimulus": "morphed words",
+    "stimulusQuality": "noise-vocoded, morphed",
+    "technique": "EEG, behavioural"
+  }
+}

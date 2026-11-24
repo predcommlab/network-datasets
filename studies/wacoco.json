@@ -1,0 +1,57 @@
+{
+  "name": "Social priors on word perception (WaCoCo)",
+  "paperTitle": "Influence of social priors on word perception",
+  "authors": "Philipp Schumann",
+  "correspondingAuthor": "Philipp Schumann",
+  "published": false,
+  "participants": "50",
+  "sessions": "1",
+  "acquisition": "Psychtoolbox, fMRI",
+  "bidsTaskLabels": "task-task",
+  "added": "2026-09-12",
+  "labels": {
+    "species": [
+      "Human"
+    ],
+    "population": [
+      "Healthy"
+    ],
+    "priorType": [
+      "Cue"
+    ],
+    "priorInduction": [
+      "Explicit"
+    ],
+    "volatility": [
+      "Low"
+    ],
+    "modality": [
+      "Auditory",
+      "Visual",
+      "Cross-modal"
+    ],
+    "stimulus": [
+      "Speech"
+    ],
+    "technique": [
+      "Behavioural responses",
+      "fMRI"
+    ],
+    "anatomicalScale": [
+      "Whole-brain"
+    ]
+  },
+  "descriptions": {
+    "species": "human",
+    "population": "healthy",
+    "paradigm": "statement listening/reading, then word listening, then decision-making (doctor choice), each trial",
+    "priorType": "socially informative statements",
+    "priorInduction": "beginning of each trial",
+    "predictability": "constant",
+    "volatility": "no volatility",
+    "modality": "prior audiovisual, target words visual only",
+    "stimulus": "prior two-dimensional (warmth, competence), target words selected for medical relevance",
+    "technique": "behavioral responses + fMRI",
+    "anatomicalScale": "whole-brain, 2mm voxel size"
+  }
+}

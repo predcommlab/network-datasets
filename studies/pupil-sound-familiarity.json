@@ -1,0 +1,63 @@
+{
+  "name": "Pupil & sound-pair familiarity",
+  "paperTitle": "Pupil diameter as an indicator of sound pair familiarity after statistically structured auditory sequence.",
+  "authors": "Janika Becker, Christoph Korn & Helen Blank",
+  "correspondingAuthor": "Janika Becker",
+  "published": true,
+  "paper": "10.1038/s41598-024-59302-1",
+  "dataUrl": "https://osf.io/t465x/",
+  "participants": "30 (Exp1), 31 (Exp2)",
+  "sessions": "1",
+  "acquisition": "SR Research Eyelink 1000",
+  "added": "2026-09-12",
+  "labels": {
+    "species": [
+      "Human"
+    ],
+    "population": [
+      "Healthy"
+    ],
+    "paradigm": [
+      "Serial task"
+    ],
+    "taskRelevance": [
+      "Task-irrelevant"
+    ],
+    "priorType": [
+      "Sequence"
+    ],
+    "priorInduction": [
+      "Implicit",
+      "Explicit"
+    ],
+    "volatility": [
+      "Low"
+    ],
+    "modality": [
+      "Auditory"
+    ],
+    "stimulus": [
+      "Speech"
+    ],
+    "stimulusQuality": [
+      "Noisy (degraded)"
+    ],
+    "technique": [
+      "Pupillometry",
+      "Behavioural responses"
+    ]
+  },
+  "descriptions": {
+    "species": "human",
+    "population": "healthy",
+    "paradigm": "listening to vowel sequences (random vs structured in pairs)",
+    "priorType": "sequence structure (random vs pairs)",
+    "priorInduction": "none/implicit (Exp1), explicit (Exp2)",
+    "predictability": "constant",
+    "volatility": "no volatility",
+    "modality": "auditory",
+    "stimulus": "recorded spoken vowels (8 or 18 speakers)",
+    "stimulusQuality": "noise-vocoded but intelligible",
+    "technique": "pupillometry, behavioural logs"
+  }
+}

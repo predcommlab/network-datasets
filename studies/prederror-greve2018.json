@@ -1,0 +1,60 @@
+{
+  "name": "Prediction-error & schema memory (Greve et al. 2018)",
+  "paperTitle": "Knowledge is power: prior knowledge aids memory for both congruent and incongruent events, but in different ways",
+  "authors": "Andrea Greve, Elisa Cooper, Roni Tibon & Richard Henson",
+  "correspondingAuthor": "Andrea Greve",
+  "published": true,
+  "paper": "10.1037/xge0000498",
+  "dataUrl": "https://osf.io/x692m/",
+  "participants": "96 (4 experiments × 24)",
+  "sessions": "1 (multi-run)",
+  "acquisition": "E-Prime",
+  "bidsTaskLabels": "task-prederror1, task-prederror2, task-prederror3, task-prederror4",
+  "added": "2026-09-12",
+  "labels": {
+    "species": [
+      "Human"
+    ],
+    "population": [
+      "Healthy"
+    ],
+    "paradigm": [
+      "Recognition",
+      "Memory"
+    ],
+    "taskRelevance": [
+      "Task-relevant"
+    ],
+    "priorType": [
+      "Schema"
+    ],
+    "priorInduction": [
+      "Implicit"
+    ],
+    "modality": [
+      "Visual"
+    ],
+    "stimulus": [
+      "Natural images"
+    ],
+    "stimulusQuality": [
+      "Distinct"
+    ],
+    "technique": [
+      "Behavioural responses"
+    ]
+  },
+  "descriptions": {
+    "species": "human",
+    "population": "healthy",
+    "paradigm": "recognition memory, prediction from prior knowledge (schema)",
+    "priorType": "semantic, schema",
+    "priorInduction": "inference / implicit learning",
+    "predictability": "equal",
+    "volatility": "some unexpected violations",
+    "modality": "visual and conceptual",
+    "stimulus": "objects and values",
+    "stimulusQuality": "clear pictures",
+    "technique": "behavioural responses"
+  }
+}

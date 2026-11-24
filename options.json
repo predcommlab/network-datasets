@@ -1,0 +1,154 @@
+{
+  "categories": [
+    {
+      "key": "species",
+      "label": "Species",
+      "options": [
+        "Human",
+        "Macaque",
+        "Mouse",
+        "Rat",
+        "Simulated data"
+      ]
+    },
+    {
+      "key": "population",
+      "label": "Population",
+      "options": [
+        "Healthy",
+        "Clinical: autism",
+        "Clinical: schizophrenia",
+        "Clinical: other"
+      ]
+    },
+    {
+      "key": "ageGroup",
+      "label": "Age group",
+      "options": [
+        "Children",
+        "Adults",
+        "Older adults"
+      ]
+    },
+    {
+      "key": "paradigm",
+      "label": "Task paradigm",
+      "options": [
+        "Oddball",
+        "Serial task",
+        "Recognition",
+        "Memory",
+        "Detection",
+        "Discrimination",
+        "Rating"
+      ]
+    },
+    {
+      "key": "taskRelevance",
+      "label": "Task-relevant vs. task-irrelevant",
+      "help": "Task-relevant: the predicted stimulus or feature matters for the participant's task. Task-irrelevant: it does not, for example in passive viewing or listening.",
+      "options": [
+        "Task-relevant",
+        "Task-irrelevant"
+      ]
+    },
+    {
+      "key": "priorType",
+      "label": "Type of prior",
+      "options": [
+        "Cue",
+        "Sequence",
+        "Natural environment",
+        "Schema"
+      ]
+    },
+    {
+      "key": "priorInduction",
+      "label": "Induction of prior",
+      "help": "Implicit: learned through repetition. Explicit: instructed cues. Naturalistic / long-term: pre-existing knowledge.",
+      "options": [
+        "Implicit",
+        "Explicit",
+        "Naturalistic / long-term"
+      ]
+    },
+    {
+      "key": "predictability",
+      "label": "Predictability",
+      "filter": false,
+      "options": [
+        "Deterministic",
+        "Probabilistic / stochastic",
+        "Random"
+      ]
+    },
+    {
+      "key": "volatility",
+      "label": "Volatility",
+      "help": "Do the priors change, so that they need updating?",
+      "options": [
+        "High",
+        "Low"
+      ]
+    },
+    {
+      "key": "modality",
+      "label": "Sensory modality",
+      "options": [
+        "Auditory",
+        "Visual",
+        "Somatosensory",
+        "Cross-modal"
+      ]
+    },
+    {
+      "key": "stimulus",
+      "label": "Stimulus properties",
+      "options": [
+        "Simple tones",
+        "Natural sounds",
+        "Gabor patches",
+        "Natural images",
+        "Video",
+        "Faces",
+        "Speech",
+        "Written text"
+      ]
+    },
+    {
+      "key": "stimulusQuality",
+      "label": "Stimulus quality",
+      "options": [
+        "Distinct",
+        "Noisy (degraded)",
+        "Ambiguous (e.g. morphed)"
+      ]
+    },
+    {
+      "key": "technique",
+      "label": "Recording technique",
+      "options": [
+        "Reaction times",
+        "Behavioural responses",
+        "Eye-tracking",
+        "Pupillometry",
+        "EEG",
+        "MEG",
+        "fMRI",
+        "fNIRS",
+        "ECoG",
+        "Single-unit",
+        "TMS"
+      ]
+    },
+    {
+      "key": "anatomicalScale",
+      "label": "Anatomical scale",
+      "options": [
+        "Whole-brain",
+        "Region of interest (ROI)",
+        "Laminar / layer-specific"
+      ]
+    }
+  ]
+}

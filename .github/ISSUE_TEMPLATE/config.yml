@@ -1,0 +1,2 @@
+# Only the forms in this folder; an issue without a form cannot be opened.
+blank_issues_enabled: false

@@ -1,0 +1,59 @@
+{
+  "name": "Serial effects in speech perception",
+  "paperTitle": "Opposing serial effects of stimulus and choice in speech perception scale with context variability",
+  "authors": "Carina Ufer & Helen Blank",
+  "correspondingAuthor": "Carina Ufer",
+  "published": true,
+  "paper": "10.1016/j.isci.2024.110611",
+  "dataUrl": "https://osf.io/9tj57/",
+  "participants": "30 (mixed), 33 (sequence fixed length), 87 (sequence variable length 7-9), 30 (blocked)",
+  "sessions": "1",
+  "acquisition": "jsPsych / Pavlovia",
+  "added": "2026-09-12",
+  "labels": {
+    "species": [
+      "Human"
+    ],
+    "population": [
+      "Healthy"
+    ],
+    "paradigm": [
+      "Serial task",
+      "Discrimination"
+    ],
+    "taskRelevance": [
+      "Task-relevant"
+    ],
+    "priorType": [
+      "Sequence"
+    ],
+    "priorInduction": [
+      "Implicit"
+    ],
+    "modality": [
+      "Auditory"
+    ],
+    "stimulus": [
+      "Speech"
+    ],
+    "stimulusQuality": [
+      "Distinct"
+    ],
+    "technique": [
+      "Behavioural responses"
+    ]
+  },
+  "descriptions": {
+    "species": "human",
+    "population": "healthy",
+    "paradigm": "listening to word sequences (minimal word pairs with u/o)",
+    "priorType": "implicit: previous trial",
+    "priorInduction": "implicit: previous trial",
+    "predictability": "constant within experiment (sequences: sequence length)",
+    "volatility": "volatility between experiments",
+    "modality": "auditory",
+    "stimulus": "word pairs manipulated in F0/FF to create different speakers",
+    "stimulusQuality": "clear words",
+    "technique": "behavioral responses"
+  }
+}

@@ -1,0 +1,145 @@
+# PredictIndex forms. A maintainer opens Issues > New issue in this repository,
+# picks a form and submits it. This workflow carries the form out
+# (.github/scripts/predictindex.py form), commits the change to main, starts the
+# Deploy workflow and replies in the issue with the link, then closes it. If
+# something is missing it replies with what to correct; editing the issue runs
+# it again. Anything else, and the part "Other changes" of Change a study, are
+# passed on to the people named in the repository variable MAINTAINER
+# (Settings > Secrets and variables > Actions > Variables; one or more GitHub
+# user names, separated by spaces), to whom every form is assigned; changing
+# that one value hands PredictIndex over to someone else.
+#
+# The repository is public, so anyone with a GitHub account can open a form.
+# Forms from people with write access take effect at once; everyone else's
+# wait until someone with write access adds the label "approved". If anything
+# goes wrong, the issue gets a reply saying so and the people in MAINTAINER
+# are mentioned; the run itself stays green, so the person who sent the form
+# is not sent GitHub's failure e-mail.
+#
+# An issue that also carries the label "test" is committed to a branch
+# forms-test-<number> instead of main and is not published; "test-as-member"
+# makes the test issue of someone with write access wait for approval like
+# anyone else's; "test-crash" (with "test") makes the script fail on purpose,
+# to test the reply that something went wrong.
+name: Forms
+
+on:
+  issues:
+    types: [opened, edited, labeled]
+
+permissions:
+  contents: write
+  issues: write
+  actions: write
+
+jobs:
+  form:
+    if: >-
+      github.event.issue.state == 'open' &&
+      contains(join(github.event.issue.labels.*.name, ','), 'form: ') &&
+      (github.event.action != 'labeled' || github.event.label.name == 'approved')
+    # One run per issue at a time. Set on the job rather than the workflow, so
+    # that the runs for the labels a new issue arrives with (skipped by the
+    # condition above) never queue behind, or replace, the run that reads the
+    # form (seen in the test repository, 2026-11-24).
+    concurrency:
+      group: form-${{ github.event.issue.number }}
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main  # the newest main, not main as it was when the issue was opened
+
+      - name: Assign the form to the people who look after PredictIndex
+        if: github.event.action == 'opened' && vars.MAINTAINER != ''
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ github.event.issue.number }}
+          MAINTAINER: ${{ vars.MAINTAINER }}
+        run: |
+          for login in $(echo "$MAINTAINER" | tr ',' ' '); do
+            gh issue edit "$NUMBER" --repo "$GITHUB_REPOSITORY" --add-assignee "${login#@}" || true
+          done
+
+      - name: Read the form and change the data
+        id: run
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPLY_FILE: ${{ runner.temp }}/reply.md
+          MAINTAINER: ${{ vars.MAINTAINER }}
+          EVENT_ACTION: ${{ github.event.action }}
+          EVENT_LABEL: ${{ github.event.label.name }}
+          EVENT_SENDER: ${{ github.event.sender.login }}
+          SITE_URL: ${{ vars.SITE_URL }}  # empty: the repository's GitHub Pages address
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: python3 .github/scripts/predictindex.py form "${{ github.event.issue.number }}"
+
+      - name: Commit and publish
+        id: commit
+        if: steps.run.outcome == 'success' && (steps.run.outputs.result == 'done' || steps.run.outputs.result == 'partial')
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ github.event.issue.number }}
+          SUMMARY: ${{ steps.run.outputs.summary }}
+          TEST: ${{ contains(github.event.issue.labels.*.name, 'test') }}
+          MAINTAINER: ${{ vars.MAINTAINER }}
+        run: |
+          git add -A studies options.json
+          if git diff --cached --quiet; then
+            echo "Nothing to commit."
+            exit 0
+          fi
+          if [ "$TEST" = true ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            python3 .github/scripts/predictindex.py sync >/dev/null
+            git add .github/ISSUE_TEMPLATE
+            git commit -q -m "PredictIndex form #$NUMBER: $SUMMARY"
+            git push -q -f origin "HEAD:refs/heads/forms-test-$NUMBER"
+            printf '\nTest only: committed to the branch forms-test-%s, not published.\n' "$NUMBER" >> "$RUNNER_TEMP/reply.md"
+            exit 0
+          fi
+          # Rebases onto the newest main, checks the data again and writes the
+          # generated parts of the forms there; see the script's header.
+          bash .github/scripts/publish.sh "PredictIndex form #$NUMBER: $SUMMARY" || exit 1
+          # The change is on main from here on, so nothing below may fail the
+          # step: the reply would say that nothing was changed.
+          if ! gh workflow run deploy.yml --ref main; then
+            sleep 15
+            if ! gh workflow run deploy.yml --ref main; then
+              who=""
+              for login in $(echo "$MAINTAINER" | tr ',' ' '); do who="$who${who:+, }@${login#@}"; done
+              printf '\nThe change is saved, but the page could not be rebuilt automatically, so it does not show the change yet. The people who look after PredictIndex%s have been notified.\n' "${who:+ ($who)}" >> "$RUNNER_TEMP/reply.md"
+            fi
+          fi
+          exit 0
+
+      - name: Reply in the issue
+        if: >-
+          steps.run.outcome == 'success' && steps.commit.outcome != 'failure' &&
+          steps.run.outputs.result != 'skip' && steps.run.outputs.result != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ github.event.issue.number }}
+          RESULT: ${{ steps.run.outputs.result }}
+        run: |
+          gh issue comment "$NUMBER" --repo "$GITHUB_REPOSITORY" --body-file "$RUNNER_TEMP/reply.md"
+          if [ "$RESULT" = done ]; then
+            gh issue close "$NUMBER" --repo "$GITHUB_REPOSITORY" --reason completed
+          fi
+
+      - name: Reply that something went wrong
+        if: steps.run.outcome == 'failure' || steps.commit.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ github.event.issue.number }}
+          MAINTAINER: ${{ vars.MAINTAINER }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          who=""
+          for login in $(echo "$MAINTAINER" | tr ',' ' '); do who="$who${who:+, }@${login#@}"; done
+          gh issue comment "$NUMBER" --repo "$GITHUB_REPOSITORY" --body "PredictIndex could not be updated because of a technical problem, so nothing has been changed. The people who look after PredictIndex${who:+ ($who)} have been notified. Details: $RUN_URL"

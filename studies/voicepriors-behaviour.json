@@ -1,0 +1,49 @@
+{
+  "name": "Bayesian Inference Voice Priors (behavioural)",
+  "authors": "Carina Ufer, Fabian Schneider & Helen Blank",
+  "correspondingAuthor": "Carina Ufer",
+  "published": false,
+  "participants": "260",
+  "sessions": "1 to 2",
+  "acquisition": "jsPsych / Pavlovia",
+  "bidsTaskLabels": "task-explicit, task-explicitnone, task-implicit, task-mixed",
+  "added": "2026-09-12",
+  "labels": {
+    "species": [
+      "Human"
+    ],
+    "population": [
+      "Healthy"
+    ],
+    "priorType": [
+      "Cue"
+    ],
+    "priorInduction": [
+      "Implicit"
+    ],
+    "volatility": [
+      "Low"
+    ],
+    "modality": [
+      "Auditory"
+    ],
+    "stimulus": [
+      "Speech",
+      "Natural sounds"
+    ],
+    "technique": [
+      "Behavioural responses"
+    ]
+  },
+  "descriptions": {
+    "species": "human",
+    "population": "healthy German speaking online sample",
+    "priorType": "categorical voice prior",
+    "priorInduction": "learning prior distribution",
+    "predictability": "equal",
+    "volatility": "no volatility",
+    "modality": "auditory",
+    "stimulus": "voice samples manipulated in pitch (F0) and brightness (formant frequencies)",
+    "technique": "behavioral responses"
+  }
+}

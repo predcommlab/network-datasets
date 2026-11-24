@@ -1,0 +1,54 @@
+name: Change the options
+description: Add, rename or remove one of the options that studies are labelled with, for example a new kind of stimulus. The filters on PredictIndex and both forms for adding a study follow.
+title: "Change the options"
+labels: ["form: options"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Renaming or removing an option changes every study that has it; the reply lists them.
+
+        Adding or removing a whole category, or changing the explanation of a category, is not possible with this form. Please use the form Anything else for that.
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        # generated: categories (written by .github/scripts/predictindex.py sync from options.json; do not edit by hand)
+        - "Species"
+        - "Population"
+        - "Age group"
+        - "Task paradigm"
+        - "Task-relevant vs. task-irrelevant"
+        - "Type of prior"
+        - "Induction of prior"
+        - "Predictability"
+        - "Volatility"
+        - "Sensory modality"
+        - "Stimulus properties"
+        - "Stimulus quality"
+        - "Recording technique"
+        - "Anatomical scale"
+        # end of generated: categories
+    validations:
+      required: true
+  - type: dropdown
+    id: action
+    attributes:
+      label: What should change?
+      options:
+        - "Add an option"
+        - "Rename an option"
+        - "Remove an option"
+    validations:
+      required: true
+  - type: input
+    id: current
+    attributes:
+      label: Option as it is now
+      description: "For Rename and Remove: the option as it is written now, for example Noisy (degraded)."
+  - type: input
+    id: new
+    attributes:
+      label: New option
+      description: "For Add and Rename: the new wording. To add an option under another one, write both with a colon, for example Clinical: dyslexia. An option cannot contain a comma."

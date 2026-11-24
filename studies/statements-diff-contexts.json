@@ -1,0 +1,52 @@
+{
+  "name": "Statements (Different Contexts)",
+  "authors": "Philipp Schumann",
+  "correspondingAuthor": "Philipp Schumann",
+  "published": false,
+  "participants": "360 (2 languages x 2 contexts x 3 versions X/O/I x30)",
+  "sessions": "1",
+  "acquisition": "jsPsych / Pavlovia",
+  "bidsTaskLabels": "task-statements-sur, task-statements-psy",
+  "added": "2026-09-12",
+  "labels": {
+    "species": [
+      "Human"
+    ],
+    "population": [
+      "Healthy"
+    ],
+    "paradigm": [
+      "Rating"
+    ],
+    "priorType": [
+      "Cue"
+    ],
+    "priorInduction": [
+      "Explicit"
+    ],
+    "volatility": [
+      "Low"
+    ],
+    "modality": [
+      "Visual"
+    ],
+    "stimulus": [
+      "Written text"
+    ],
+    "technique": [
+      "Behavioural responses"
+    ]
+  },
+  "descriptions": {
+    "species": "human",
+    "population": "general online sample, U.S. & Germany",
+    "paradigm": "ratings of statements",
+    "priorType": "randomly assigned medical practitioner context (surgeon vs psychotherapist)",
+    "priorInduction": "pre-experiment, cover story",
+    "predictability": "constant",
+    "volatility": "no volatility",
+    "modality": "visual / written",
+    "stimulus": "statements (2 sentences each)",
+    "technique": "behavioral responses"
+  }
+}

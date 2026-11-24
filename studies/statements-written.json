@@ -1,0 +1,39 @@
+{
+  "name": "Statements (Written)",
+  "authors": "Philipp Schumann",
+  "correspondingAuthor": "Philipp Schumann",
+  "published": false,
+  "participants": "90 (3 versions X/O/I × 30)",
+  "sessions": "1",
+  "acquisition": "Unipark (Tivian EFS Survey)",
+  "bidsTaskLabels": "task-statements",
+  "added": "2026-09-12",
+  "labels": {
+    "species": [
+      "Human"
+    ],
+    "population": [
+      "Healthy"
+    ],
+    "paradigm": [
+      "Rating"
+    ],
+    "modality": [
+      "Visual"
+    ],
+    "stimulus": [
+      "Written text"
+    ],
+    "technique": [
+      "Behavioural responses"
+    ]
+  },
+  "descriptions": {
+    "species": "human",
+    "population": "general online sample, Germany",
+    "paradigm": "ratings of statements",
+    "modality": "visual / written",
+    "stimulus": "statements (2 sentences each)",
+    "technique": "behavioral responses"
+  }
+}

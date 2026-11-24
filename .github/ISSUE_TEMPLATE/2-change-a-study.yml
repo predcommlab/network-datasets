@@ -1,0 +1,245 @@
+name: Change a study
+description: Correct a study on PredictIndex, add its links once it is published, change its labels, or remove it. Only the fields you fill in are changed.
+title: "Change a study"
+labels: ["form: change"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Everything written in this form is public. Fill in only what should change; empty fields stay as they are.
+
+        To empty a field, for example to remove the number of sessions, write a dash (-) into it.
+  - type: dropdown
+    id: study
+    attributes:
+      label: Study
+      description: "Choose the study. The list shows every study on PredictIndex, newest first."
+      options:
+        # generated: studies (written by .github/scripts/predictindex.py sync; do not edit by hand)
+        - "Expectation suppression and statistical learning"
+        - "Adaptive Information Sampling Under Uncertainty"
+        - "Bayesian Inference Voice Priors (behavioural)"
+        - "Prediction-error & schema memory (Greve et al. 2018)"
+        - "Pupil & sound-pair familiarity"
+        - "Pupil, cue uncertainty & outcome surprise"
+        - "Sensory sharpening & semantic prediction errors"
+        - "Serial effects in speech perception"
+        - "Social priors on word perception (WaCoCo)"
+        - "Statements (Different Contexts)"
+        - "Statements (Voiced)"
+        - "Statements (Written)"
+        - "Syllable Sequence (EEG)"
+        - "Visual sequences (EEG)"
+        - "Voice properties & speaker context"
+        - "Voice Rating Pre-study (Statements Voiced pilot)"
+        # end of generated: studies
+    validations:
+      required: true
+  - type: checkboxes
+    id: remove
+    attributes:
+      label: Remove
+      options:
+        - label: "Remove this study from PredictIndex."
+  - type: input
+    id: name
+    attributes:
+      label: Study name
+      description: "The name shown as the title of the study."
+  - type: input
+    id: paper_title
+    attributes:
+      label: Paper title
+      description: "When a new DOI is given under Paper, its title is looked up automatically, and this field can stay empty."
+  - type: input
+    id: authors
+    attributes:
+      label: Authors
+      description: "As on the paper, with first and last names, separated by commas."
+  - type: input
+    id: corresponding_author
+    attributes:
+      label: Corresponding author
+  - type: dropdown
+    id: published
+    attributes:
+      label: Is the study published (or available as a preprint)?
+      description: "Choose Yes once the study is published, and give its paper below. Choosing Not yet takes its links off the page."
+      options:
+        - "Yes"
+        - "Not yet"
+  - type: input
+    id: paper
+    attributes:
+      label: Paper
+      description: "Only for a published study: the DOI of the paper or preprint, for example 10.1038/s41598-024-59302-1, or a link to it. It replaces the current one."
+  - type: input
+    id: data
+    attributes:
+      label: Data
+      description: "Only for a published study: the link to the data. It replaces the current one."
+  - type: input
+    id: participants
+    attributes:
+      label: Number of participants
+  - type: input
+    id: sessions
+    attributes:
+      label: Number of sessions
+  - type: input
+    id: acquisition
+    attributes:
+      label: Acquisition
+      description: "The recording software or device, shown in Details, for example SR Research EyeLink 1000."
+  - type: input
+    id: bids
+    attributes:
+      label: BIDS task label
+      description: "Shown in Details, for example task-statements."
+  - type: dropdown
+    id: labels_add
+    attributes:
+      label: Labels to add
+      description: "Choose one or more labels the study should have in addition to its current ones (multiple selections possible)."
+      multiple: true
+      options:
+        # generated: labels (written by .github/scripts/predictindex.py sync from options.json; do not edit by hand)
+        - "Species: Human"
+        - "Species: Macaque"
+        - "Species: Mouse"
+        - "Species: Rat"
+        - "Species: Simulated data"
+        - "Population: Healthy"
+        - "Population: Clinical: autism"
+        - "Population: Clinical: schizophrenia"
+        - "Population: Clinical: other"
+        - "Age group: Children"
+        - "Age group: Adults"
+        - "Age group: Older adults"
+        - "Task paradigm: Oddball"
+        - "Task paradigm: Serial task"
+        - "Task paradigm: Recognition"
+        - "Task paradigm: Memory"
+        - "Task paradigm: Detection"
+        - "Task paradigm: Discrimination"
+        - "Task paradigm: Rating"
+        - "Task-relevant vs. task-irrelevant: Task-relevant"
+        - "Task-relevant vs. task-irrelevant: Task-irrelevant"
+        - "Type of prior: Cue"
+        - "Type of prior: Sequence"
+        - "Type of prior: Natural environment"
+        - "Type of prior: Schema"
+        - "Induction of prior: Implicit"
+        - "Induction of prior: Explicit"
+        - "Induction of prior: Naturalistic / long-term"
+        - "Predictability: Deterministic"
+        - "Predictability: Probabilistic / stochastic"
+        - "Predictability: Random"
+        - "Volatility: High"
+        - "Volatility: Low"
+        - "Sensory modality: Auditory"
+        - "Sensory modality: Visual"
+        - "Sensory modality: Somatosensory"
+        - "Sensory modality: Cross-modal"
+        - "Stimulus properties: Simple tones"
+        - "Stimulus properties: Natural sounds"
+        - "Stimulus properties: Gabor patches"
+        - "Stimulus properties: Natural images"
+        - "Stimulus properties: Video"
+        - "Stimulus properties: Faces"
+        - "Stimulus properties: Speech"
+        - "Stimulus properties: Written text"
+        - "Stimulus quality: Distinct"
+        - "Stimulus quality: Noisy (degraded)"
+        - "Stimulus quality: Ambiguous (e.g. morphed)"
+        - "Recording technique: Reaction times"
+        - "Recording technique: Behavioural responses"
+        - "Recording technique: Eye-tracking"
+        - "Recording technique: Pupillometry"
+        - "Recording technique: EEG"
+        - "Recording technique: MEG"
+        - "Recording technique: fMRI"
+        - "Recording technique: fNIRS"
+        - "Recording technique: ECoG"
+        - "Recording technique: Single-unit"
+        - "Recording technique: TMS"
+        - "Anatomical scale: Whole-brain"
+        - "Anatomical scale: Region of interest (ROI)"
+        - "Anatomical scale: Laminar / layer-specific"
+        # end of generated: labels
+  - type: dropdown
+    id: labels_remove
+    attributes:
+      label: Labels to remove
+      description: "Choose one or more labels the study should no longer have (multiple selections possible)."
+      multiple: true
+      options:
+        # generated: labels (written by .github/scripts/predictindex.py sync from options.json; do not edit by hand)
+        - "Species: Human"
+        - "Species: Macaque"
+        - "Species: Mouse"
+        - "Species: Rat"
+        - "Species: Simulated data"
+        - "Population: Healthy"
+        - "Population: Clinical: autism"
+        - "Population: Clinical: schizophrenia"
+        - "Population: Clinical: other"
+        - "Age group: Children"
+        - "Age group: Adults"
+        - "Age group: Older adults"
+        - "Task paradigm: Oddball"
+        - "Task paradigm: Serial task"
+        - "Task paradigm: Recognition"
+        - "Task paradigm: Memory"
+        - "Task paradigm: Detection"
+        - "Task paradigm: Discrimination"
+        - "Task paradigm: Rating"
+        - "Task-relevant vs. task-irrelevant: Task-relevant"
+        - "Task-relevant vs. task-irrelevant: Task-irrelevant"
+        - "Type of prior: Cue"
+        - "Type of prior: Sequence"
+        - "Type of prior: Natural environment"
+        - "Type of prior: Schema"
+        - "Induction of prior: Implicit"
+        - "Induction of prior: Explicit"
+        - "Induction of prior: Naturalistic / long-term"
+        - "Predictability: Deterministic"
+        - "Predictability: Probabilistic / stochastic"
+        - "Predictability: Random"
+        - "Volatility: High"
+        - "Volatility: Low"
+        - "Sensory modality: Auditory"
+        - "Sensory modality: Visual"
+        - "Sensory modality: Somatosensory"
+        - "Sensory modality: Cross-modal"
+        - "Stimulus properties: Simple tones"
+        - "Stimulus properties: Natural sounds"
+        - "Stimulus properties: Gabor patches"
+        - "Stimulus properties: Natural images"
+        - "Stimulus properties: Video"
+        - "Stimulus properties: Faces"
+        - "Stimulus properties: Speech"
+        - "Stimulus properties: Written text"
+        - "Stimulus quality: Distinct"
+        - "Stimulus quality: Noisy (degraded)"
+        - "Stimulus quality: Ambiguous (e.g. morphed)"
+        - "Recording technique: Reaction times"
+        - "Recording technique: Behavioural responses"
+        - "Recording technique: Eye-tracking"
+        - "Recording technique: Pupillometry"
+        - "Recording technique: EEG"
+        - "Recording technique: MEG"
+        - "Recording technique: fMRI"
+        - "Recording technique: fNIRS"
+        - "Recording technique: ECoG"
+        - "Recording technique: Single-unit"
+        - "Recording technique: TMS"
+        - "Anatomical scale: Whole-brain"
+        - "Anatomical scale: Region of interest (ROI)"
+        - "Anatomical scale: Laminar / layer-specific"
+        # end of generated: labels
+  - type: textarea
+    id: other
+    attributes:
+      label: Other changes
+      description: "Anything else to change on this study. This part is not automatic: it goes to the people who look after PredictIndex, who make the change and reply here."

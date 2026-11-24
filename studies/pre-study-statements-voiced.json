@@ -1,0 +1,36 @@
+{
+  "name": "Voice Rating Pre-study (Statements Voiced pilot)",
+  "authors": "Nele Pfitzner, Philipp Schumann & Helen Blank",
+  "correspondingAuthor": "Nele Pfitzner",
+  "published": false,
+  "participants": "30",
+  "sessions": "1",
+  "acquisition": "jsPsych / Pavlovia",
+  "bidsTaskLabels": "voice_rating",
+  "added": "2026-09-12",
+  "labels": {
+    "species": [
+      "Human"
+    ],
+    "population": [
+      "Healthy"
+    ],
+    "modality": [
+      "Auditory"
+    ],
+    "stimulus": [
+      "Natural sounds",
+      "Speech"
+    ],
+    "technique": [
+      "Behavioural responses"
+    ]
+  },
+  "descriptions": {
+    "species": "human",
+    "population": "healthy",
+    "modality": "auditory",
+    "stimulus": "natural sounds (voices)",
+    "technique": "behavioral responses"
+  }
+}

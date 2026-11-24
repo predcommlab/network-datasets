@@ -1,0 +1,37 @@
+{
+  "name": "Visual sequences (EEG)",
+  "authors": "Arjen Alink",
+  "correspondingAuthor": "Arjen Alink",
+  "published": false,
+  "sessions": "6",
+  "acquisition": "Brain Vision (EEG)",
+  "added": "2026-09-12",
+  "labels": {
+    "species": [
+      "Human"
+    ],
+    "population": [
+      "Healthy"
+    ],
+    "volatility": [
+      "Low"
+    ],
+    "modality": [
+      "Visual"
+    ],
+    "stimulus": [
+      "Natural images"
+    ],
+    "technique": [
+      "EEG"
+    ]
+  },
+  "descriptions": {
+    "species": "human",
+    "population": "healthy",
+    "volatility": "no volatility",
+    "modality": "visual",
+    "stimulus": "images",
+    "technique": "+ EEG"
+  }
+}

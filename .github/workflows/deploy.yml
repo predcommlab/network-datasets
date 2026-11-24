@@ -1,0 +1,75 @@
+# Publishes PredictIndex with GitHub Pages: runs the tests, checks the data,
+# brings the generated parts of the forms up to date, builds studies.js from
+# options.json and studies/, and puts the page online. Only the page's own
+# files are published (index.html, studies.js, fonts/, img/), not the data
+# folder, the tests or the guide.
+#
+# Runs on every push to main, for example a file changed in GitHub's editor,
+# and when the Forms workflow starts it after a form: a push made by a
+# workflow does not start other workflows by itself. It always builds the
+# newest main. If the tests or the checks fail, nothing is published and the
+# page stays as it was; GitHub then e-mails the person whose change started
+# the run.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+# Two jobs, as in GitHub's own example: an uploaded page is not always visible
+# to the deployment within the same second (seen 2026-11-24), and the second
+# job starts some seconds after the first has finished.
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # to push the forms' lists
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Run the tests
+        run: python3 -B -m unittest discover -s tests
+
+      - name: Check the data
+        run: python3 -B .github/scripts/predictindex.py check
+
+      - name: Bring the generated parts of the forms up to date
+        continue-on-error: true  # the page is published even if this fails
+        run: |
+          python3 -B .github/scripts/predictindex.py sync
+          git add .github/ISSUE_TEMPLATE
+          if ! git diff --cached --quiet; then
+            bash .github/scripts/publish.sh "Forms: lists brought up to date"
+          fi
+
+      - name: Build the page
+        run: |
+          mkdir -p _site
+          python3 -B .github/scripts/predictindex.py build --out _site/studies.js
+          cp -R index.html fonts img _site/
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write     # to publish the page
+      id-token: write  # to show GitHub that the page comes from this workflow
+    environment:
+      name: github-pages
+      url: ${{ steps.pages.outputs.page_url }}
+    steps:
+      - id: pages
+        uses: actions/deploy-pages@v5
