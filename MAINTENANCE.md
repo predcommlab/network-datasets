@@ -28,7 +28,7 @@ is for:
    ![The predcommlab/network-datasets repository on GitHub, with its name, the Issues tab and the green New issue button marked](guide-images/new-issue.png)
 2. Choose a form (see section 3).
 
-   ![The page Create new issue, with the forms](guide-images/choose-form.png)
+   ![The page Create new issue, with the four forms Add a study, Change a study, Change a label and Change a category](guide-images/choose-form.png)
 3. Fill in the form. Click **Create**.
 
    ![The end of the form Add a study, with the green Create button marked](guide-images/create-button.png)
