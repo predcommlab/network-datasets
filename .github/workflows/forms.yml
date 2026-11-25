@@ -3,29 +3,29 @@
 # (.github/scripts/predictindex.py form), commits the change to main, starts the
 # Deploy workflow and replies in the issue with the link, then closes it. If
 # something is missing it replies with what to correct; editing the issue runs
-# it again. Anything else, and the part "Other changes" of Change a study, are
-# passed on to the people named in the repository variable MAINTAINER
-# (Settings > Secrets and variables > Actions > Variables; one or more GitHub
-# user names, separated by spaces), to whom every form is assigned; changing
-# that one value hands PredictIndex over to someone else.
+# it again. Every form is assigned to the people named in the repository
+# variable MAINTAINER (Settings > Secrets and variables > Actions > Variables;
+# one or more GitHub user names, separated by spaces); changing that one value
+# hands PredictIndex over to someone else.
 #
 # The repository is public, so anyone with a GitHub account can open a form.
-# Forms from people with write access take effect at once; everyone else's
-# wait until someone with write access adds the label "approved". If anything
+# Forms from people with write access are carried out; anyone else's form is
+# closed at once, with a reply saying that the forms are only for the people
+# who look after PredictIndex. If anything
 # goes wrong, the issue gets a reply saying so and the people in MAINTAINER
 # are mentioned; the run itself stays green, so the person who sent the form
 # is not sent GitHub's failure e-mail.
 #
 # An issue that also carries the label "test" is committed to a branch
 # forms-test-<number> instead of main and is not published; "test-as-member"
-# makes the test issue of someone with write access wait for approval like
-# anyone else's; "test-crash" (with "test") makes the script fail on purpose,
+# makes the test issue of someone with write access be closed like anyone
+# else's; "test-crash" (with "test") makes the script fail on purpose,
 # to test the reply that something went wrong.
 name: Forms
 
 on:
   issues:
-    types: [opened, edited, labeled]
+    types: [opened, edited]
 
 permissions:
   contents: write
@@ -36,12 +36,9 @@ jobs:
   form:
     if: >-
       github.event.issue.state == 'open' &&
-      contains(join(github.event.issue.labels.*.name, ','), 'form: ') &&
-      (github.event.action != 'labeled' || github.event.label.name == 'approved')
-    # One run per issue at a time. Set on the job rather than the workflow, so
-    # that the runs for the labels a new issue arrives with (skipped by the
-    # condition above) never queue behind, or replace, the run that reads the
-    # form (seen in the test repository, 2026-11-24).
+      contains(join(github.event.issue.labels.*.name, ','), 'form: ')
+    # One run per issue at a time, so that an edit made while the form is being
+    # read waits for that run (set on the job, after its condition).
     concurrency:
       group: form-${{ github.event.issue.number }}
       cancel-in-progress: false
@@ -71,15 +68,13 @@ jobs:
           REPLY_FILE: ${{ runner.temp }}/reply.md
           MAINTAINER: ${{ vars.MAINTAINER }}
           EVENT_ACTION: ${{ github.event.action }}
-          EVENT_LABEL: ${{ github.event.label.name }}
-          EVENT_SENDER: ${{ github.event.sender.login }}
           SITE_URL: ${{ vars.SITE_URL }}  # empty: the repository's GitHub Pages address
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: python3 .github/scripts/predictindex.py form "${{ github.event.issue.number }}"
 
       - name: Commit and publish
         id: commit
-        if: steps.run.outcome == 'success' && (steps.run.outputs.result == 'done' || steps.run.outputs.result == 'partial')
+        if: steps.run.outcome == 'success' && steps.run.outputs.result == 'done'
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
@@ -130,6 +125,8 @@ jobs:
           gh issue comment "$NUMBER" --repo "$GITHUB_REPOSITORY" --body-file "$RUNNER_TEMP/reply.md"
           if [ "$RESULT" = done ]; then
             gh issue close "$NUMBER" --repo "$GITHUB_REPOSITORY" --reason completed
+          elif [ "$RESULT" = declined ]; then
+            gh issue close "$NUMBER" --repo "$GITHUB_REPOSITORY" --reason "not planned"
           fi
 
       - name: Reply that something went wrong

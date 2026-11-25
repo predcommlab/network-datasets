@@ -251,8 +251,8 @@ const SHOWN = {status: {"Published": "Published (and preprints)"}};
 
 // Categories not listed under Study design in a card's Details: technique
 // and modality are the card's tags, and species has never been listed there.
-// Every other category is listed, in the order of options.json, in the
-// owner's own words where there are any, otherwise as its labels.
+// Every other category is listed with its labels, in the order of
+// options.json, and the study's Additional information comes last.
 const NOT_IN_DETAILS = ["species","modality","technique"];
 
 const ESC = {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"};
@@ -324,7 +324,7 @@ function deciding(key){
 function matches(s){
   if(q){
     const hay = [s.name, s.paperTitle, s.authors, s.correspondingAuthor, s.acquisition,
-                 s.bidsTaskLabels].concat(Object.values(s.descriptions||{})).join(" ").toLowerCase();
+                 s.bidsTaskLabels, s.additionalInfo].concat(...Object.values(s.labels||{})).join(" ").toLowerCase();
     if(!hay.includes(q)) return false;
   }
   for(const f of FACETS){
@@ -416,8 +416,8 @@ function render(){
       : '';
 
     // Details panel: sample size and acquisition, the paper in full, the BIDS
-    // task label, then the study design: each category in the owner's own
-    // words where there are any, otherwise as its labels.
+    // task label, then the study design: each category with its labels, and
+    // the Additional information (its line breaks kept).
     const unit = (v, word, already) =>
       !v ? "" : (already.test(v) ? v : v+" "+word+(v==="1" ? "" : "s"));
     const row = (k, v) => v ? '<div class="drow"><span class="dkey">'+k+'</span><span class="dval">'+v+'</span></div>' : '';
@@ -426,7 +426,8 @@ function render(){
       : s.paperLink ? '<a class="pdoi" href="'+esc(s.paperLink)+'" target="_blank" rel="noopener">'+esc(s.paperLink.replace(/^https?:\/\/(www\.)?/,""))+'<span class="arrow" aria-hidden="true">↗</span></a>' : '';
     const paperFull = (s.paperTitle ? '<span class="ptitle">'+esc(s.paperTitle)+'</span>' : '') + paperLink;
     const designRows = OPTIONS.categories.filter(c=>!NOT_IN_DETAILS.includes(c.key)).map(c=>
-      row(esc(c.label), esc((s.descriptions||{})[c.key] || valuesOf(s, c.key).join(", ")))).join("");
+      row(esc(c.label), esc(valuesOf(s, c.key).join(", ")))).join("")
+      + row("Additional information", esc(s.additionalInfo).replace(/\n/g, "<br>"));
     const rows = row("Sample size", sample) + row("Acquisition", esc(s.acquisition)) + row("Paper", paperFull)
       + (s.bidsTaskLabels ? '<div class="drow"><span class="dkey">BIDS task label</span><span class="dval mono">'+esc(s.bidsTaskLabels)+'</span></div>' : '')
       + (designRows ? '<div class="dgroup">Study design</div>'+designRows : '');
@@ -468,9 +469,10 @@ function downloadTable(){
   const today = now.getFullYear()+"-"+pad(now.getMonth()+1)+"-"+pad(now.getDate());
   const cats = OPTIONS.categories;
   const head = ["Study","Paper title","Authors","Corresponding author","Status","Paper","Data","Participants",
-                "Sessions","Acquisition"].concat(cats.map(c=>c.label));
+                "Sessions","Acquisition"].concat(cats.map(c=>c.label), ["Additional information"]);
   const rows = listed.map(s=>[s.name, s.paperTitle, s.authors, s.correspondingAuthor, statusOf(s), s.paperLink,
-    s.dataUrl, s.participants, s.sessions, s.acquisition].concat(cats.map(c=>valuesOf(s, c.key).join(", "))));
+    s.dataUrl, s.participants, s.sessions, s.acquisition].concat(cats.map(c=>valuesOf(s, c.key).join(", ")),
+    [(s.additionalInfo||"").replace(/\n/g, "; ")]));
   const filters = FACETS.filter(f=>sel[f.key].size).map(f=>f.label+": "+[...sel[f.key]].map(v=>shown(f.key, v)).join(", "));
   const about = [
     ["PredictIndex", "A Searchable Directory of Predictive Processing Studies and Datasets"],

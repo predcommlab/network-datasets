@@ -50,18 +50,5 @@
       "Eye-tracking"
     ]
   },
-  "descriptions": {
-    "species": "human",
-    "population": "healthy",
-    "paradigm": "recognition",
-    "priorType": "cue, sequence",
-    "priorInduction": "implicit learning",
-    "predictability": "probabilistic",
-    "volatility": "high",
-    "modality": "visual",
-    "stimulus": "faces",
-    "stimulusQuality": "distinct",
-    "technique": "reaction times, behavioral responses, eye-tracking",
-    "anatomicalScale": "oculomotor system"
-  }
+  "additionalInfo": "Anatomical scale: oculomotor system"
 }

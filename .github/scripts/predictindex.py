@@ -33,17 +33,20 @@ The forms (label "form: <kind>", set by the template):
   form: add      Add a study           a new file in studies/
   form: change   Change a study        the fields filled in, labels added or
                                        removed, or the study removed
-  form: options  Change the options    an option added, renamed or removed, in
+  form: options  Change a label        a label added, renamed or removed, in
                                        options.json and in every study
-  form: other    Anything else         passed on to the people in MAINTAINER
+                 Change a category     a category added, renamed or removed,
+                                       or its explanation changed (the same
+                                       label; the answer to "What should
+                                       change?" tells the two forms apart)
 
 For the workflow, in $GITHUB_OUTPUT:
   result   done        data changed; reply, then close the issue
-           partial     data changed, a part is left for a person; reply
-           waiting     nothing to do automatically yet; reply
+           declined    a form from someone without write access: reply, then
+                       close the issue unread
            needs-info  nothing changed; the reply says what to correct
            skip        nothing to do (a closed issue, not a form, a label
-                       other than approved)
+                       added)
            error       a technical problem; the reply says so
   summary  one line for the commit message
 The reply goes to the file named by $REPLY_FILE.
@@ -75,9 +78,9 @@ PAGE_DATA = "studies.js"
 # The fields of a study file, in the order they are written.
 FIELDS = ["name", "paperTitle", "authors", "correspondingAuthor", "published", "paper",
           "dataUrl", "participants", "sessions", "acquisition", "bidsTaskLabels", "added",
-          "labels", "descriptions"]
+          "labels", "additionalInfo"]
 REQUIRED = ["name", "authors", "correspondingAuthor", "published", "added"]
-TEXT_FIELDS = [f for f in FIELDS if f not in ("published", "labels", "descriptions")]
+TEXT_FIELDS = [f for f in FIELDS if f not in ("published", "labels")]
 CATEGORY_FIELDS = ["key", "label", "help", "filter", "options"]
 RESERVED_KEYS = {"status", "owner", "q"}  # the page's own URL parameters
 
@@ -173,8 +176,8 @@ def check_options(options):
         label = c.get("label")
         if not isinstance(label, str) or not label.strip():
             problems.append(f'{where}: "label" is missing.')
-        elif "," in label:
-            problems.append(f'{where}: the label "{label}" contains a comma, which is not allowed.')
+        elif "," in label or ":" in label:
+            problems.append(f'{where}: the label "{label}" contains a comma or a colon, which is not allowed.')
         elif label.casefold() in labels:
             problems.append(f'{where}: the label "{label}" is used twice.')
         else:
@@ -257,15 +260,6 @@ def check_study(where, data, categories):
                     f'The options are: {", ".join(cat["options"])}.')
         if len(set(values)) != len(values):
             bad(f'labels: an option of {cat["label"]} is listed twice.')
-    descriptions = data.get("descriptions", {})
-    if not isinstance(descriptions, dict):
-        bad('"descriptions" has to be an object ({...}).')
-        descriptions = {}
-    for key, value in descriptions.items():
-        if key not in categories:
-            bad(f'descriptions: "{key}" is not a category of {OPTIONS_FILE}.')
-        elif not (isinstance(value, str) and value.strip()):
-            bad(f'descriptions: "{key}" has to be a piece of text.')
     if any("@" in s for s in strings(data)):
         bad('contains "@". No e-mail addresses may be written into the data.')
     return problems
@@ -335,9 +329,8 @@ def add_option(options, key, option, after=None):
 
 def rename_option(options, studies, key, old, new):
     """Renames an option in options.json and in every study that has it; if
-    `new` is an option already, the two become one. A description of the
-    category that only repeats the old option becomes the new one. Returns the
-    ids of the studies changed. `studies` is a list of (id, data)."""
+    `new` is an option already, the two become one. Returns the ids of the
+    studies changed. `studies` is a list of (id, data)."""
     opts = category(options, key)["options"]
     i = opts.index(old)
     if new in opts:
@@ -346,37 +339,24 @@ def rename_option(options, studies, key, old, new):
         opts[i] = new
     touched = []
     for sid, data in studies:
-        labels, texts = data.setdefault("labels", {}), data.setdefault("descriptions", {})
-        changed = False
+        labels = data.setdefault("labels", {})
         if old in labels.get(key, []):
             labels[key] = list(dict.fromkeys(new if v == old else v for v in labels[key]))
-            changed = True
-        if key in texts and same_text(texts[key], old):
-            texts[key] = new
-            changed = True
-        if changed:
             touched.append(sid)
     return touched
 
 
 def remove_option(options, studies, key, option):
-    """Removes an option from options.json and from every study that has it. A
-    description of the category that only repeats the option goes as well.
+    """Removes an option from options.json and from every study that has it.
     Returns the ids of the studies changed."""
     category(options, key)["options"].remove(option)
     touched = []
     for sid, data in studies:
-        labels, texts = data.setdefault("labels", {}), data.setdefault("descriptions", {})
-        changed = False
+        labels = data.setdefault("labels", {})
         if option in labels.get(key, []):
             labels[key] = [v for v in labels[key] if v != option]
             if not labels[key]:
                 del labels[key]
-            changed = True
-        if key in texts and same_text(texts[key], option):
-            del texts[key]
-            changed = True
-        if changed:
             touched.append(sid)
     return touched
 
@@ -401,10 +381,16 @@ def save(root, options, studies, ids=None):
 
 # ------------------------------------------------------------- the writing
 
+def multi_line(text):
+    """Text that may have several lines (Additional information): each line
+    with single spaces, empty lines left out."""
+    return "\n".join(line for line in (one_line(x) for x in str(text or "").splitlines()) if line)
+
+
 def canonical_study(data, order):
     """A study as it is written to its file: the fields in the order of FIELDS,
-    labels and descriptions in the order of the categories (`order`, a list of
-    keys), text on one line, nothing empty."""
+    labels in the order of the categories (`order`, a list of keys), text on
+    one line (Additional information may have several), nothing empty."""
     out = {}
     for k in FIELDS:
         v = data.get(k)
@@ -415,10 +401,9 @@ def canonical_study(data, order):
             labels = {key: [one_line(x) for x in v] for key, v in (v or {}).items() if v}
             if labels:
                 out[k] = {key: labels[key] for key in order if key in labels}
-        elif k == "descriptions":
-            texts = {key: one_line(x) for key, x in (v or {}).items() if one_line(x)}
-            if texts:
-                out[k] = {key: texts[key] for key in order if key in texts}
+        elif k == "additionalInfo":
+            if multi_line(v):
+                out[k] = multi_line(v)
         elif one_line(v):
             out[k] = one_line(v)
     return out
@@ -462,7 +447,6 @@ def page_study(sid, data, order):
         else:
             out[k] = s[k]
     out.setdefault("labels", {})
-    out.setdefault("descriptions", {})
     return out
 
 
@@ -532,17 +516,19 @@ Q = {
     "sessions": "Number of sessions",
     "acquisition": "Acquisition",
     "bids": "BIDS task label",
-    "google": "Answers from the Google Form",
+    "additional": "Additional information",
     "notes": "Notes for the maintainers",
     "study": "Study",
     "remove": "Remove",
     "add_labels": "Labels to add",
     "remove_labels": "Labels to remove",
-    "other": "Other changes",
     "category": "Category",
     "action": "What should change?",
-    "current": "Option as it is now",
-    "new": "New option",
+    "current": "Label as it is now",
+    "new": "New label",
+    "new_name": "New name",
+    "new_labels": "Labels of the new category",
+    "explanation": "Explanation",
 }
 # The text fields of Change a study and the fields of a study file they change.
 CHANGE_TEXT = [("name", "name"), ("paper_title", "paperTitle"), ("authors", "authors"),
@@ -595,14 +581,10 @@ def the_maintainers():
     return f"the people who look after PredictIndex ({who})" if who else "the people who look after PredictIndex"
 
 
-def passed_on():
-    return f"This has been passed on to {the_maintainers()}, who make the change and reply here."
-
-
-def awaiting_approval():
-    return ("This form takes effect once it has been approved: one of "
-            f"{the_maintainers()} adds the label approved on this page (Labels, on the right). "
-            "Until then nothing on PredictIndex changes.")
+def declined():
+    return ("This form was not carried out and has been closed: the GitHub forms of this repository are only for "
+            "the people who look after PredictIndex. If you are one of them, please ask an administrator of the "
+            "repository for write access, then send the form again.")
 
 
 def technical_problem():
@@ -626,8 +608,8 @@ def online(name=None):
 
 
 def may_publish(login, repo):
-    """Forms from people with write access take effect at once; everyone
-    else's wait for the label approved."""
+    """Forms from people with write access are carried out; anyone else's are
+    closed unread."""
     if not login:
         return False
     try:
@@ -795,12 +777,9 @@ def paper_checks(paper, title, data_url, notes):
     return title
 
 
-def labels_from_add(answers, options, notes):
-    """The labels ticked in Add a study, plus the lines of Answers from the
-    Google Form ("Category: answer", one per line). An answer that is not an
-    option keeps the category's answers as the study's own description of it,
-    shown in Details."""
-    labels, texts, written = {}, {}, {}
+def labels_from_add(answers, options):
+    """The labels ticked in Add a study."""
+    labels = {}
     for cat in options["categories"]:
         for option in ticked(answers.get(cat["label"], "")):
             known = option_in(cat, option)
@@ -810,36 +789,15 @@ def labels_from_add(answers, options, notes):
             labels.setdefault(cat["key"], [])
             if known not in labels[cat["key"]]:
                 labels[cat["key"]].append(known)
-    for line in (answers.get(Q["google"]) or "").splitlines():
-        line = line.strip().lstrip("-*• ").strip()
-        if not line:
-            continue
-        head, sep, value = line.partition(": ")
-        cat = category_by_label(options, head) if sep else None
-        if not cat or not one_line(value):
-            notes.append(f'The line "{line}" under {Q["google"]} was left out, as it does not name one of the '
-                         "categories of PredictIndex and an answer.")
-            continue
-        if "@" in value:
-            raise Missing(f"{Q['google']} may not contain the character @.")
-        written.setdefault(cat["key"], []).append(one_line(value))
-    for key, values in written.items():
-        cat = category(options, key)
-        for v in values:
-            known = option_in(cat, v)
-            if known and known not in labels.setdefault(key, []):
-                labels[key].append(known)
-        if not labels.get(key):
-            labels.pop(key, None)
-        unknown = [v for v in values if not option_in(cat, v)]
-        if unknown:
-            texts[key] = ", ".join(dict.fromkeys(values))
-            notes.append(f'{", ".join(chr(34) + v + chr(34) for v in unknown)} '
-                         f'{"is not an option" if len(unknown) == 1 else "are not options"} of {cat["label"]}, '
-                         "so the answer is shown in the study's Details but cannot be used as a filter. To make it "
-                         "an option, use the form Change the options, then add it to the study with the form "
-                         "Change a study.")
-    return labels, texts
+    return labels
+
+
+def additional_value(raw):
+    """Additional information as written in a form, each line tidied."""
+    text = multi_line(raw)
+    if "@" in text:
+        raise Missing(f"{Q['additional']} may not contain the character @.")
+    return text
 
 
 def verified(root):
@@ -879,7 +837,8 @@ def add_study(answers, root, options, studies):
                      "are only shown once a study is published. When it is, please use the form Change a study, "
                      "choose Yes under the question whether it is published, and give the links there.")
     study["paperTitle"] = title
-    study["labels"], study["descriptions"] = labels_from_add(answers, options, notes)
+    study["labels"] = labels_from_add(answers, options)
+    study["additionalInfo"] = additional_value(answers.get(Q["additional"]))
     sid = new_id(name, {s for s, _ in studies})
     order = [c["key"] for c in options["categories"]]
     (Path(root) / STUDIES_DIR / f"{sid}.json").write_text(dump_json(canonical_study(study, order)), encoding="utf-8")
@@ -899,15 +858,13 @@ def change_study(answers, root, options, studies):
                       "new form; the list is updated after every change.")
     sid, data = match[0]
     path = Path(root) / STUDIES_DIR / f"{sid}.json"
-    other = (answers.get(Q["other"]) or "").strip()
-    filled = [q for k, q in Q.items() if k not in ("study", "remove", "other") and one_line(answers.get(q))]
+    filled = [q for k, q in Q.items() if k not in ("study", "remove") and one_line(answers.get(q))]
     if ticked(answers.get(Q["remove"])):
         path.unlink()
         verified(root)
         reply = [f"Removed from PredictIndex: {data['name']}.",
-                 "If this was a mistake, the study can be restored from the history of this repository; please "
-                 "ask with the form Anything else.", online()]
-        if filled or other:
+                 "If this was a mistake, add the study again with the form Add a study.", online()]
+        if filled:
             reply.insert(1, "The other fields of the form were not needed, since the study is removed.")
         return "done", f"remove {data['name']}", reply
 
@@ -962,8 +919,18 @@ def change_study(answers, root, options, studies):
             notes.append("The study is now listed as not yet published, so its links ("
                          + " and ".join(taken_off) + ") were taken off the page.")
 
-    labels, texts = data.setdefault("labels", {}), data.setdefault("descriptions", {})
-    touched = []
+    raw_extra = (answers.get(Q["additional"]) or "").strip()
+    if raw_extra:
+        if one_line(raw_extra) in CLEAR:
+            if data.pop("additionalInfo", None):
+                changes.append(f"{Q['additional']}: removed")
+        else:
+            extra = additional_value(raw_extra)
+            if extra != data.get("additionalInfo"):
+                data["additionalInfo"] = extra
+                changes.append(f"{Q['additional']}: " + extra.replace("\n", " / "))
+
+    labels = data.setdefault("labels", {})
     for item in chosen(answers.get(Q["add_labels"])):
         cat, option = label_choice(options, item)
         if option in labels.get(cat["key"], []):
@@ -971,7 +938,6 @@ def change_study(answers, root, options, studies):
             continue
         labels.setdefault(cat["key"], []).append(option)
         changes.append(f"Label added: {cat['label']}: {option}")
-        touched.append(cat)
     for item in chosen(answers.get(Q["remove_labels"])):
         cat, option = label_choice(options, item)
         if option not in labels.get(cat["key"], []):
@@ -981,13 +947,8 @@ def change_study(answers, root, options, studies):
         if not labels[cat["key"]]:
             del labels[cat["key"]]
         changes.append(f"Label removed: {cat['label']}: {option}")
-        touched.append(cat)
-    for cat in {c["key"]: c for c in touched}.values():
-        if cat["key"] in texts:
-            notes.append(f'The study\'s own description of {cat["label"]} ("{texts.pop(cat["key"])}") was removed, '
-                         "as its labels changed; Details now shows the labels instead.")
 
-    if not changes and not other:
+    if not changes:
         if filled:
             return "done", "", ["Nothing needed changing: the study already has these details."] + notes
         raise Missing("Please fill in or tick at least one change.")
@@ -995,13 +956,8 @@ def change_study(answers, root, options, studies):
         order = [c["key"] for c in options["categories"]]
         path.write_text(dump_json(canonical_study(data, order)), encoding="utf-8")
         verified(root)
-    reply = ([f"Changed on PredictIndex: {data['name']}"] + [f"- {c}" for c in changes] + [online(data["name"])]
-             if changes else []) + notes
-    summary = f"change {data['name']}" if changes else ""
-    if other:
-        reply.append("The other changes are not automatic. " + passed_on())
-        return ("partial" if changes else "waiting"), summary, reply
-    return "done", summary, reply
+    reply = [f"Changed on PredictIndex: {data['name']}"] + [f"- {c}" for c in changes] + [online(data["name"])] + notes
+    return "done", f"change {data['name']}", reply
 
 
 def change_options(answers, root, options, studies):
@@ -1013,53 +969,58 @@ def change_options(answers, root, options, studies):
 
     def the_new_option():
         if not new:
-            raise Missing(f"Please write the new option under {Q['new']}.")
+            raise Missing(f"Please write the new label under {Q['new']}.")
         if "," in new:
-            raise Missing("An option cannot contain a comma, since GitHub separates the options chosen in a "
+            raise Missing("A label cannot contain a comma, since GitHub separates the labels chosen in a "
                           "form with commas. Please write it without one, for example e.g. instead of e.g.,")
         if "@" in new:
-            raise Missing("An option may not contain the character @.")
+            raise Missing("A label may not contain the character @.")
         return new
 
     def the_current_option():
         if not current:
-            raise Missing(f"Please write the option as it is now under {Q['current']}.")
+            raise Missing(f"Please write the label as it is now under {Q['current']}.")
         found = option_in(cat, current)
         if not found:
-            raise Missing(f'"{current}" is not an option of {cat["label"]}. Its options are: '
+            raise Missing(f'"{current}" is not a label of {cat["label"]}. Its labels are: '
                           + ", ".join(cat["options"]) + ".")
         return found
 
     if action.startswith("add"):
         option = the_new_option()
         if option_in(cat, option):
-            raise Missing(f'"{option_in(cat, option)}" is an option of {cat["label"]} already.')
+            raise Missing(f'"{option_in(cat, option)}" is a label of {cat["label"]} already.')
         parent = parent_of(option)
         family = [o for o in cat["options"] if parent and (o == parent or parent_of(o) == parent)]
         add_option(options, cat["key"], option, after=family[-1] if family else None)
-        touched, said = [], f'{cat["label"]}: the option "{option}" was added.'
-        summary = f'options: add "{option}" to {cat["label"]}'
+        touched, said = [], f'{cat["label"]}: the label "{option}" was added.'
+        summary = f'labels: add "{option}" to {cat["label"]}'
     elif action.startswith("rename"):
         old, option = the_current_option(), the_new_option()
         if option == old:
-            raise Missing("The new option is written exactly like the old one.")
+            raise Missing("The new label is written exactly like the old one.")
         existing = option_in(cat, option)
         target = existing if existing and existing != old else option
         touched = rename_option(options, studies, cat["key"], old, target)
-        said = (f'{cat["label"]}: "{old}" and "{target}" are now one option, "{target}".' if target == existing and existing != old
-                else f'{cat["label"]}: the option "{old}" is now called "{target}".')
-        summary = f'options: rename "{old}" to "{target}" in {cat["label"]}'
+        said = (f'{cat["label"]}: "{old}" and "{target}" are now one label, "{target}".' if target == existing and existing != old
+                else f'{cat["label"]}: the label "{old}" is now called "{target}".')
+        summary = f'labels: rename "{old}" to "{target}" in {cat["label"]}'
     elif action.startswith("remove"):
         old = the_current_option()
         if len(cat["options"]) == 1:
-            raise Missing(f'"{old}" is the only option of {cat["label"]}, and a category needs at least one. '
-                          "To remove the whole category, please use the form Anything else.")
+            raise Missing(f'"{old}" is the only label of {cat["label"]}, and a category needs at least one. '
+                          "To remove the whole category, please use the form Change a category.")
         touched = remove_option(options, studies, cat["key"], old)
-        said = f'{cat["label"]}: the option "{old}" was removed.'
-        summary = f'options: remove "{old}" from {cat["label"]}'
+        said = f'{cat["label"]}: the label "{old}" was removed.'
+        summary = f'labels: remove "{old}" from {cat["label"]}'
     else:
-        raise Missing("Please choose what should change: Add an option, Rename an option or Remove an option.")
+        raise Missing("Please choose what should change: Add a label, Rename a label or Remove a label.")
 
+    return finish_options(root, options, studies, touched, said, summary)
+
+
+def finish_options(root, options, studies, touched, said, summary):
+    """Saves a change of the labels or categories and writes the reply."""
     save(root, options, studies, ids=set(touched))
     verified(root)
     names = sorted(d["name"] for s, d in studies if s in touched)
@@ -1068,8 +1029,106 @@ def change_options(answers, root, options, studies):
         reply.append(("This study has been changed with it: " if len(names) == 1 else
                       f"These {len(names)} studies have been changed with it: ") + "; ".join(names) + ".")
     reply.append("PredictIndex's filters and the forms of this repository follow in about a minute "
-                 f"({site()}); the Google Form takes over the new options during the night.")
+                 f"({site()}). The Google Form does not change by itself: please make the same change there.")
     return "done", summary, reply
+
+
+def new_key(name, taken):
+    """A key for a new category, made from its name: one word of letters, for
+    example ageGroup for Age group. The key appears in the addresses of
+    filtered views (?ageGroup=Children) and never changes."""
+    s = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
+    words = re.findall(r"[A-Za-z]+", s)
+    base = words[0].lower() + "".join(w[:1].upper() + w[1:].lower() for w in words[1:]) if words else "category"
+    key, n = base, 0
+    while key in taken or key in RESERVED_KEYS:
+        n += 1
+        key = base + chr(ord("A") + n)  # ageGroupB, ageGroupC, ...
+    return key
+
+
+def category_name(raw, options, ignore=None):
+    """The name of a new or renamed category, checked."""
+    name = plain(raw, Q["new_name"])
+    if not name:
+        raise Missing(f"Please write the category's name under {Q['new_name']}.")
+    if "," in name or ":" in name:
+        raise Missing("A category's name cannot contain a comma or a colon, since the forms use them to separate "
+                      "categories and labels.")
+    taken = next((c for c in options["categories"] if c is not ignore and same_text(c["label"], name)), None)
+    if taken:
+        raise Missing(f'There is a category called "{taken["label"]}" already.')
+    return name
+
+
+def change_category(answers, root, options, studies):
+    """Change a category: add, rename or remove a category, or change its
+    explanation (shown with the category in the GitHub forms)."""
+    action = one_line(answers.get(Q["action"])).lower()
+    raw_help = one_line(answers.get(Q["explanation"]))
+
+    def chosen_category():
+        cat = category_by_label(options, answers.get(Q["category"]))
+        if not cat:
+            raise Missing(f"Please choose the category under {Q['category']}. If it is missing, open a new form; "
+                          "the list is updated after every change.")
+        return cat
+
+    touched = []
+    if action.startswith("add"):
+        name = category_name(answers.get(Q["new_name"]), options)
+        labels = []
+        for line in (answers.get(Q["new_labels"]) or "").splitlines():
+            label = plain(line.strip().lstrip("-*• ").strip(), Q["new_labels"])
+            if not label:
+                continue
+            if "," in label:
+                raise Missing(f'The label "{label}" contains a comma. A label cannot contain one, since GitHub '
+                              "separates the labels chosen in a form with commas.")
+            if not any(same_text(label, x) for x in labels):
+                labels.append(label)
+        if not labels:
+            raise Missing(f"Please write the labels of the new category under {Q['new_labels']}, one per line.")
+        cat = {"key": new_key(name, {c["key"] for c in options["categories"]}), "label": name, "options": labels}
+        if raw_help and raw_help not in CLEAR:
+            cat["help"] = plain(raw_help, Q["explanation"])
+        options["categories"].append(cat)
+        said = f'The category "{name}" was added, with the labels {", ".join(labels)}.'
+        summary = f'categories: add "{name}"'
+    elif action.startswith("rename"):
+        cat = chosen_category()
+        old, name = cat["label"], category_name(answers.get(Q["new_name"]), options, ignore=cat)
+        if name == old:
+            raise Missing("The new name is written exactly like the old one.")
+        cat["label"] = name
+        said = f'The category "{old}" is now called "{name}".'
+        summary = f'categories: rename "{old}" to "{name}"'
+    elif action.startswith("change"):
+        cat = chosen_category()
+        if not raw_help:
+            raise Missing(f"Please write the new explanation under {Q['explanation']}, or a dash (-) to remove it.")
+        if raw_help in CLEAR:
+            if not cat.pop("help", None):
+                raise Missing(f'The category "{cat["label"]}" has no explanation to remove.')
+            said = f'The explanation of "{cat["label"]}" was removed.'
+        else:
+            cat["help"] = plain(raw_help, Q["explanation"])
+            said = f'The explanation of "{cat["label"]}" is now: {cat["help"]}'
+        summary = f'categories: explanation of "{cat["label"]}"'
+    elif action.startswith("remove"):
+        cat = chosen_category()
+        if len(options["categories"]) == 1:
+            raise Missing("This is the only category, and PredictIndex needs at least one.")
+        options["categories"].remove(cat)
+        for sid, data in studies:
+            if data.get("labels", {}).pop(cat["key"], None):
+                touched.append(sid)
+        said = f'The category "{cat["label"]}" was removed, with its labels.'
+        summary = f'categories: remove "{cat["label"]}"'
+    else:
+        raise Missing("Please choose what should change: Add a category, Rename a category, Change a category's "
+                      "explanation or Remove a category.")
+    return finish_options(root, options, studies, touched, said, summary)
 
 
 def handle(issue, root, repo, env=None, permission=None):
@@ -1079,7 +1138,7 @@ def handle(issue, root, repo, env=None, permission=None):
     labels = {label["name"] for label in issue.get("labels", [])}
     kind = next((label for label in sorted(labels) if label.startswith("form: ")), None)
     action = env.get("EVENT_ACTION", "opened")
-    if issue.get("state") != "open" or not kind or (action == "labeled" and env.get("EVENT_LABEL") != "approved"):
+    if issue.get("state") != "open" or not kind or action == "labeled":
         return "skip", "", []
     answers = fields(issue.get("body"))
     email = next((m.group(0) for v in answers.values() for m in [EMAIL.search(v)] if m), None)
@@ -1087,15 +1146,9 @@ def handle(issue, root, repo, env=None, permission=None):
                    "remove it: click the three dots at the top right of your form text on this page, choose "
                    "Edit, delete the address and click Update comment. GitHub keeps the earlier version in the "
                    f"edit history; {the_maintainers()} can delete it there.")
-    if kind == "form: other":
-        if action != "opened":
-            return "skip", "", []
-        return "waiting", "", [passed_on()] + ([email_reply] if email else [])
     author = (issue.get("user") or {}).get("login", "")
-    allowed = ((permission(author) and "test-as-member" not in labels)
-               or ("approved" in labels and (action != "labeled" or permission(env.get("EVENT_SENDER", "")))))
-    if not allowed:
-        return ("waiting", "", [awaiting_approval()]) if action == "opened" else ("skip", "", [])
+    if not permission(author) or "test-as-member" in labels:
+        return ("declined", "", [declined()]) if action == "opened" else ("skip", "", [])
     if email:
         return "needs-info", "", ["Nothing has been changed yet. " + email_reply]
     options, studies = verified(root)
@@ -1105,6 +1158,8 @@ def handle(issue, root, repo, env=None, permission=None):
         if kind == "form: change":
             return change_study(answers, root, options, studies)
         if kind == "form: options":
+            if "category" in one_line(answers.get(Q["action"])).lower():
+                return change_category(answers, root, options, studies)
             return change_options(answers, root, options, studies)
     except Missing as e:
         return "needs-info", "", ["Nothing has been changed yet. " + str(e), edit_hint(repo)]

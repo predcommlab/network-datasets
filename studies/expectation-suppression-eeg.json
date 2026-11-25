@@ -46,18 +46,5 @@
     "anatomicalScale": [
       "Whole-brain"
     ]
-  },
-  "descriptions": {
-    "species": "Human",
-    "population": "Healthy",
-    "priorType": "Cue",
-    "priorInduction": "Implicit",
-    "predictability": "Probabilistic / stochastic",
-    "volatility": "Low",
-    "modality": "Visual",
-    "stimulus": "Natural images",
-    "stimulusQuality": "Distinct",
-    "technique": "Behavioural responses, EEG",
-    "anatomicalScale": "Whole-brain"
   }
 }

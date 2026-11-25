@@ -1,14 +1,14 @@
-name: Change the options
-description: Add, rename or remove one of the options that studies are labelled with, for example a new kind of stimulus. The filters on PredictIndex and both forms for adding a study follow.
-title: "Change the options"
+name: Change a label
+description: Add, rename or remove one of the labels of a category, for example a new kind of stimulus. The filters on PredictIndex and the GitHub forms follow.
+title: "Change a label"
 labels: ["form: options"]
 body:
   - type: markdown
     attributes:
       value: |
-        Renaming or removing an option changes every study that has it; the reply lists them.
+        Renaming or removing a label changes every study that has it; the reply lists them.
 
-        Adding or removing a whole category, or changing the explanation of a category, is not possible with this form. Please use the form Anything else for that.
+        To add, rename or remove a whole category, or to change its explanation, please use the form Change a category.
   - type: dropdown
     id: category
     attributes:
@@ -37,18 +37,18 @@ body:
     attributes:
       label: What should change?
       options:
-        - "Add an option"
-        - "Rename an option"
-        - "Remove an option"
+        - "Add a label"
+        - "Rename a label"
+        - "Remove a label"
     validations:
       required: true
   - type: input
     id: current
     attributes:
-      label: Option as it is now
-      description: "For Rename and Remove: the option as it is written now, for example Noisy (degraded)."
+      label: Label as it is now
+      description: "For Rename and Remove: the label as it is written now, for example Noisy (degraded)."
   - type: input
     id: new
     attributes:
-      label: New option
-      description: "For Add and Rename: the new wording. To add an option under another one, write both with a colon, for example Clinical: dyslexia. An option cannot contain a comma."
+      label: New label
+      description: "For Add and Rename: the new wording. To add a label under another one, write both with a colon, for example Clinical: dyslexia. A label cannot contain a comma."

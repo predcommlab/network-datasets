@@ -44,17 +44,5 @@
       "Behavioural responses"
     ]
   },
-  "descriptions": {
-    "species": "human",
-    "population": "healthy",
-    "paradigm": "recognition memory, prediction from prior knowledge (schema)",
-    "priorType": "semantic, schema",
-    "priorInduction": "inference / implicit learning",
-    "predictability": "equal",
-    "volatility": "some unexpected violations",
-    "modality": "visual and conceptual",
-    "stimulus": "objects and values",
-    "stimulusQuality": "clear pictures",
-    "technique": "behavioural responses"
-  }
+  "additionalInfo": "Predictability: equal\nVolatility: some unexpected violations\nStimuli: objects and values"
 }

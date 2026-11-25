@@ -43,17 +43,5 @@
       "Behavioural responses"
     ]
   },
-  "descriptions": {
-    "species": "human",
-    "population": "healthy",
-    "paradigm": "listening to word sequences (minimal word pairs with u/o)",
-    "priorType": "implicit: previous trial",
-    "priorInduction": "implicit: previous trial",
-    "predictability": "constant within experiment (sequences: sequence length)",
-    "volatility": "volatility between experiments",
-    "modality": "auditory",
-    "stimulus": "word pairs manipulated in F0/FF to create different speakers",
-    "stimulusQuality": "clear words",
-    "technique": "behavioral responses"
-  }
+  "additionalInfo": "Predictability: constant within an experiment (sequences: sequence length)\nVolatility: between experiments"
 }

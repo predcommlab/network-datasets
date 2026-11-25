@@ -36,7 +36,7 @@ PUBLISHED = {
     "correspondingAuthor": "Ann Author", "published": True, "paper": "10.1234/abcd.5678",
     "dataUrl": "https://osf.io/abcde/", "participants": "30", "sessions": "1", "added": "2026-09-12",
     "labels": {"species": ["Human"], "paradigm": ["Rating"], "technique": ["EEG"]},
-    "descriptions": {"paradigm": "rating statements on a scale"},
+    "additionalInfo": "Task: rating statements on a scale",
 }
 UNPUBLISHED = {
     "name": "An unpublished study", "authors": "Cara Author", "correspondingAuthor": "Cara Author",
@@ -68,7 +68,7 @@ def add_form(**over):
                Q["corresponding"]: "Dan Author", Q["published"]: "Yes", Q["paper"]: "10.5555/new.paper",
                Q["data"]: "https://osf.io/newdt/", Q["participants"]: "24", Q["sessions"]: "",
                "Species": ["Human"], "Recording technique": ["EEG", "Pupillometry"],
-               Q["google"]: "", Q["notes"]: ""}
+               Q["additional"]: "", Q["notes"]: ""}
     answers.update(over)
     return [(q, a) for q, a in answers.items() if a is not None]
 
@@ -205,17 +205,19 @@ class AddAStudy(Forms):
         self.assertEqual(result, "needs-info")
         self.assertIn("is not a link", text)
 
-    def test_answers_from_the_google_form(self):
-        lines = "\n".join(["Species: human", "Population: Clinical: autism", "Recording technique: EEG",
-                           "Recording technique: tactile vibration", "Signal level: BOLD", "nonsense"])
-        result, _, text = self.run_form(issue("add", *add_form(**{Q["google"]: lines, "Recording technique": ["fMRI"]})))
+    def test_additional_information(self):
+        extra = "Task: predicting words from cues\n\n  Sample:   online sample, Germany  "
+        result, _, text = self.run_form(issue("add", *add_form(**{Q["additional"]: extra})))
         self.assertEqual(result, "done")
         s = self.study("a-new-study")
-        self.assertEqual(s["labels"], {"species": ["Human"], "population": ["Clinical: autism"], "technique": ["fMRI", "EEG"]})
-        self.assertEqual(s["descriptions"], {"technique": "EEG, tactile vibration"})
-        self.assertIn('"tactile vibration" is not an option of Recording technique', text)
-        self.assertIn('The line "Signal level: BOLD"', text)
-        self.assertIn('The line "nonsense"', text)
+        self.assertEqual(s["additionalInfo"], "Task: predicting words from cues\nSample: online sample, Germany")
+        self.assertEqual(s["labels"], {"species": ["Human"], "technique": ["EEG", "Pupillometry"]})
+
+    def test_additional_information_without_at_signs(self):
+        result, _, text = self.run_form(issue("add", *add_form(**{Q["additional"]: "Tweets: @predlab"})))
+        self.assertEqual(result, "needs-info")
+        self.assertIn("Additional information may not contain the character @", text)
+        self.assertNothingChanged()
 
     def test_an_e_mail_address_anywhere(self):
         result, _, text = self.run_form(issue("add", *add_form(**{Q["notes"]: "Questions to dan@example.org please"})))
@@ -314,12 +316,21 @@ class ChangeAStudy(Forms):
         self.assertEqual(result, "done")
         s = self.study("published")
         self.assertEqual(s["labels"], {"species": ["Human"], "population": ["Clinical: autism"], "paradigm": ["Rating", "Oddball"]})
-        self.assertNotIn("descriptions", s)  # its only description was of Task paradigm, whose labels changed
+        self.assertEqual(s["additionalInfo"], PUBLISHED["additionalInfo"])  # labels leave it alone
         self.assertIn("- Label added: Population: Clinical: autism", text)
         self.assertIn("- Label removed: Recording technique: EEG", text)
         self.assertIn("Species: Human was one of the study's labels already.", text)
         self.assertIn("Task paradigm: Recognition was not one of the study's labels.", text)
-        self.assertIn('own description of Task paradigm ("rating statements on a scale") was removed', text)
+
+    def test_additional_information_replaced_and_removed(self):
+        result, _, text = self.change(additional="Sample: online\nTask: rating")
+        self.assertEqual(result, "done")
+        self.assertEqual(self.study("published")["additionalInfo"], "Sample: online\nTask: rating")
+        self.assertIn("- Additional information: Sample: online / Task: rating", text)
+        result, _, text = self.change(additional="-")
+        self.assertEqual(result, "done")
+        self.assertNotIn("additionalInfo", self.study("published"))
+        self.assertIn("- Additional information: removed", text)
 
     def test_a_label_that_is_no_longer_there(self):
         result, _, text = self.change(add_labels="Task paradigm: Prediction")
@@ -349,123 +360,191 @@ class ChangeAStudy(Forms):
         self.assertIn("Nothing needed changing", text)
         self.assertNothingChanged()
 
-    def test_other_changes_go_to_a_person(self):
-        result, _, text = self.change(other="Please also mention the second dataset.")
-        self.assertEqual(result, "waiting")
-        self.assertIn("This has been passed on to the people who look after PredictIndex (@hannah, @kirsten)", text)
-        result, _, text = self.change(participants="31", other="And the second dataset.")
-        self.assertEqual(result, "partial")
-        self.assertIn("- Number of participants: 31", text)
+    def test_a_removed_study_can_be_added_again(self):
+        result, _, text = self.change(remove=["Remove this study from PredictIndex."])
+        self.assertEqual(result, "done")
+        self.assertIn("add the study again with the form Add a study", text)
+        self.assertNotIn("Anything else", text)
 
 
-class ChangeTheOptions(Forms):
+class ChangeALabel(Forms):
     def options_form(self, category, action, current="", new=""):
         return self.run_form(issue("options", (Q["category"], category), (Q["action"], action),
                                    (Q["current"], current), (Q["new"], new)))
 
     def test_adding_an_option(self):
-        result, summary, text = self.options_form("Recording technique", "Add an option", new="MEG")
-        self.assertEqual((result, summary), ("done", 'options: add "MEG" to Recording technique'))
+        result, summary, text = self.options_form("Recording technique", "Add a label", new="MEG")
+        self.assertEqual((result, summary), ("done", 'labels: add "MEG" to Recording technique'))
         self.assertEqual(self.options()["categories"][3]["options"], ["EEG", "fMRI", "Pupillometry", "MEG"])
-        self.assertIn('Recording technique: the option "MEG" was added.', text)
-        self.assertIn("the Google Form takes over the new options during the night", text)
+        self.assertIn('Recording technique: the label "MEG" was added.', text)
+        self.assertIn("The Google Form does not change by itself: please make the same change there.", text)
 
     def test_a_sub_option_joins_its_family(self):
-        self.options_form("Population", "Add an option", new="Clinical: dyslexia")
+        self.options_form("Population", "Add a label", new="Clinical: dyslexia")
         self.assertEqual(self.options()["categories"][1]["options"],
                          ["Healthy", "Clinical: autism", "Clinical: schizophrenia", "Clinical: other", "Clinical: dyslexia"])
 
     def test_adding_an_option_that_is_there(self):
-        result, _, text = self.options_form("Recording technique", "Add an option", new="eeg")
+        result, _, text = self.options_form("Recording technique", "Add a label", new="eeg")
         self.assertEqual(result, "needs-info")
-        self.assertIn('"EEG" is an option of Recording technique already', text)
+        self.assertIn('"EEG" is a label of Recording technique already', text)
 
     def test_an_option_with_a_comma(self):
-        result, _, text = self.options_form("Recording technique", "Add an option", new="Ambiguous (e.g., morphed)")
+        result, _, text = self.options_form("Recording technique", "Add a label", new="Ambiguous (e.g., morphed)")
         self.assertEqual(result, "needs-info")
         self.assertIn("cannot contain a comma", text)
         self.assertNothingChanged()
 
     def test_renaming_an_option(self):
-        result, _, text = self.options_form("Task paradigm", "Rename an option", current="rating", new="Rating task")
+        result, _, text = self.options_form("Task paradigm", "Rename a label", current="rating", new="Rating task")
         self.assertEqual(result, "done")
         self.assertEqual(self.options()["categories"][2]["options"], ["Oddball", "Rating task", "Recognition"])
         self.assertEqual(self.study("published")["labels"]["paradigm"], ["Rating task"])
         self.assertEqual(self.study("unpublished")["labels"]["paradigm"], ["Rating task"])
-        self.assertIn('the option "Rating" is now called "Rating task"', text)
+        self.assertIn('the label "Rating" is now called "Rating task"', text)
         self.assertIn("These 2 studies have been changed with it: A published study; An unpublished study.", text)
 
     def test_renaming_onto_another_option_merges_them(self):
-        result, _, text = self.options_form("Task paradigm", "Rename an option", current="Rating", new="oddball")
+        result, _, text = self.options_form("Task paradigm", "Rename a label", current="Rating", new="oddball")
         self.assertEqual(result, "done")
         self.assertEqual(self.options()["categories"][2]["options"], ["Oddball", "Recognition"])
         self.assertEqual(self.study("published")["labels"]["paradigm"], ["Oddball"])
-        self.assertIn('are now one option, "Oddball"', text)
+        self.assertIn('are now one label, "Oddball"', text)
 
     def test_renaming_only_the_capitals(self):
-        result, _, _ = self.options_form("Recording technique", "Rename an option", current="fMRI", new="FMRI")
+        result, _, _ = self.options_form("Recording technique", "Rename a label", current="fMRI", new="FMRI")
         self.assertEqual(result, "done")
         self.assertEqual(self.options()["categories"][3]["options"], ["EEG", "FMRI", "Pupillometry"])
 
     def test_removing_an_option(self):
-        result, _, text = self.options_form("Recording technique", "Remove an option", current="EEG")
+        result, _, text = self.options_form("Recording technique", "Remove a label", current="EEG")
         self.assertEqual(result, "done")
         self.assertEqual(self.options()["categories"][3]["options"], ["fMRI", "Pupillometry"])
         self.assertNotIn("technique", self.study("published")["labels"])
         self.assertIn("This study has been changed with it: A published study.", text)
 
     def test_the_last_option_stays(self):
-        self.options_form("Recording technique", "Remove an option", current="fMRI")
-        self.options_form("Recording technique", "Remove an option", current="Pupillometry")
-        result, _, text = self.options_form("Recording technique", "Remove an option", current="EEG")
+        self.options_form("Recording technique", "Remove a label", current="fMRI")
+        self.options_form("Recording technique", "Remove a label", current="Pupillometry")
+        result, _, text = self.options_form("Recording technique", "Remove a label", current="EEG")
         self.assertEqual(result, "needs-info")
-        self.assertIn("is the only option of Recording technique", text)
+        self.assertIn("is the only label of Recording technique", text)
+        self.assertIn("use the form Change a category", text)
 
     def test_an_option_that_is_not_there(self):
-        result, _, text = self.options_form("Recording technique", "Remove an option", current="MEG")
+        result, _, text = self.options_form("Recording technique", "Remove a label", current="MEG")
         self.assertEqual(result, "needs-info")
-        self.assertIn("Its options are: EEG, fMRI, Pupillometry.", text)
+        self.assertIn("Its labels are: EEG, fMRI, Pupillometry.", text)
 
     def test_no_action_chosen(self):
         result, _, _ = self.options_form("Recording technique", "", new="MEG")
         self.assertEqual(result, "needs-info")
 
 
+class ChangeACategory(Forms):
+    def category_form(self, action, category="", new_name="", new_labels="", explanation=""):
+        return self.run_form(issue("options", (Q["action"], action), (Q["category"], category), (Q["new_name"], new_name),
+                                   (Q["new_labels"], new_labels), (Q["explanation"], explanation)))
+
+    def test_adding_a_category(self):
+        result, summary, text = self.category_form("Add a category", new_name="Age group",
+                                                   new_labels="Children\n- Adults\n\nOlder adults\nadults",
+                                                   explanation="The age of the participants.")
+        self.assertEqual((result, summary), ("done", 'categories: add "Age group"'))
+        self.assertEqual(self.options()["categories"][-1],
+                         {"key": "ageGroup", "label": "Age group", "help": "The age of the participants.",
+                          "options": ["Children", "Adults", "Older adults"]})
+        self.assertIn('The category "Age group" was added, with the labels Children, Adults, Older adults.', text)
+        self.assertIn("The Google Form does not change by itself", text)
+        self.assertEqual(self.study("published"), PUBLISHED)  # no study has its labels yet
+
+    def test_a_new_category_needs_a_new_name_and_labels(self):
+        for name, labels, said in (("Species", "Cat", 'There is a category called "Species" already'),
+                                   ("Age, group", "Children", "cannot contain a comma or a colon"),
+                                   ("Age group", "", "Please write the labels of the new category"),
+                                   ("Age group", "Young, old", 'The label "Young, old" contains a comma'),
+                                   ("", "Children", "Please write the category's name")):
+            with self.subTest(name=name, labels=labels):
+                result, _, text = self.category_form("Add a category", new_name=name, new_labels=labels)
+                self.assertEqual(result, "needs-info")
+                self.assertIn(said, text)
+        self.assertNothingChanged()
+
+    def test_a_key_is_made_from_the_name_and_never_taken_twice(self):
+        self.assertEqual(pi.new_key("Age group", set()), "ageGroup")
+        self.assertEqual(pi.new_key("Größe der Stichprobe", set()), "groeDerStichprobe")  # letters a to z only
+        self.assertEqual(pi.new_key("Age group", {"ageGroup"}), "ageGroupB")
+        self.assertEqual(pi.new_key("Status", set()), "statusB")  # a word the page itself uses
+        self.assertEqual(pi.new_key("123", set()), "category")
+
+    def test_renaming_a_category(self):
+        result, _, text = self.category_form("Rename a category", category="Task paradigm", new_name="Task")
+        self.assertEqual(result, "done")
+        cat = self.options()["categories"][2]
+        self.assertEqual((cat["key"], cat["label"]), ("paradigm", "Task"))  # the key stays, so links keep working
+        self.assertEqual(self.study("published")["labels"]["paradigm"], ["Rating"])
+        self.assertIn('The category "Task paradigm" is now called "Task".', text)
+
+    def test_renaming_onto_another_category(self):
+        result, _, text = self.category_form("Rename a category", category="Task paradigm", new_name="species")
+        self.assertEqual(result, "needs-info")
+        self.assertIn('There is a category called "Species" already', text)
+
+    def test_changing_and_removing_an_explanation(self):
+        result, _, text = self.category_form("Change a category's explanation", category="Population",
+                                             explanation="Who took part.")
+        self.assertEqual(result, "done")
+        self.assertEqual(self.options()["categories"][1]["help"], "Who took part.")
+        self.assertIn('The explanation of "Population" is now: Who took part.', text)
+        result, _, text = self.category_form("Change a category's explanation", category="Population", explanation="-")
+        self.assertEqual(result, "done")
+        self.assertNotIn("help", self.options()["categories"][1])
+        result, _, text = self.category_form("Change a category's explanation", category="Population", explanation="-")
+        self.assertEqual(result, "needs-info")
+        self.assertIn("has no explanation to remove", text)
+
+    def test_removing_a_category(self):
+        result, summary, text = self.category_form("Remove a category", category="Task paradigm")
+        self.assertEqual((result, summary), ("done", 'categories: remove "Task paradigm"'))
+        self.assertNotIn("paradigm", [c["key"] for c in self.options()["categories"]])
+        self.assertNotIn("paradigm", self.study("published")["labels"])
+        self.assertNotIn("paradigm", self.study("unpublished")["labels"])
+        self.assertIn("These 2 studies have been changed with it: A published study; An unpublished study.", text)
+
+    def test_a_category_must_be_chosen(self):
+        result, _, text = self.category_form("Remove a category")
+        self.assertEqual(result, "needs-info")
+        self.assertIn("Please choose the category under Category", text)
+        self.assertNothingChanged()
+
+
 class WhoMayChangeWhat(Forms):
-    def test_a_member_s_form_waits_for_approval(self):
+    def test_a_form_from_someone_without_write_access_is_closed_unread(self):
         result, _, text = self.run_form(issue("add", *add_form(), user="member"))
-        self.assertEqual(result, "waiting")
-        self.assertIn("adds the label approved", text)
+        self.assertEqual(result, "declined")
+        self.assertIn("only for the people who look after PredictIndex", text)
+        self.assertIn("ask an administrator of the repository for write access", text)
         self.assertNothingChanged()
 
-    def test_editing_a_waiting_form_does_not_reply_again(self):
-        result, _, _ = self.run_form(issue("add", *add_form(), user="member"), action="edited", sender="member")
-        self.assertEqual(result, "skip")
-
-    def test_approved_by_someone_with_write_access(self):
-        result, _, _ = self.run_form(issue("add", *add_form(), user="member", labels=["approved"]),
-                                     action="labeled", label="approved", sender="writer")
-        self.assertEqual(result, "done")
-        self.assertIsNotNone(self.study("a-new-study"))
-
-    def test_approved_by_someone_without_write_access(self):
-        result, _, _ = self.run_form(issue("add", *add_form(), user="member", labels=["approved"]),
-                                     action="labeled", label="approved", sender="member")
+    def test_editing_such_a_form_does_nothing(self):
+        result, _, _ = self.run_form(issue("add", *add_form(), user="member"), action="edited")
         self.assertEqual(result, "skip")
         self.assertNothingChanged()
 
-    def test_an_approved_form_edited_later_is_read_again(self):
-        result, _, _ = self.run_form(issue("add", *add_form(), user="member", labels=["approved"]),
-                                     action="edited", sender="member")
-        self.assertEqual(result, "done")
-
-    def test_another_label(self):
-        result, _, _ = self.run_form(issue("add", *add_form(), labels=["bug"]), action="labeled", label="bug")
-        self.assertEqual(result, "skip")
+    def test_no_label_starts_a_form(self):
+        # the label approved no longer exists as a way in (2026-11-26)
+        for labels, label in ((["approved"], "approved"), (["bug"], "bug")):
+            with self.subTest(label=label):
+                result, _, _ = self.run_form(issue("add", *add_form(), user="member", labels=labels),
+                                             action="labeled", label=label)
+                self.assertEqual(result, "skip")
+        result, _, _ = self.run_form(issue("add", *add_form(), user="member", labels=["approved"]))
+        self.assertEqual(result, "declined")
+        self.assertNothingChanged()
 
     def test_test_as_member(self):
         result, _, _ = self.run_form(issue("add", *add_form(), labels=["test", "test-as-member"]))
-        self.assertEqual(result, "waiting")
+        self.assertEqual(result, "declined")
 
     def test_a_closed_issue_or_one_without_a_form(self):
         self.assertEqual(self.run_form(issue("add", *add_form(), state="closed"))[0], "skip")
@@ -473,11 +552,14 @@ class WhoMayChangeWhat(Forms):
         no_form["labels"] = [{"name": "bug"}]
         self.assertEqual(self.run_form(no_form)[0], "skip")
 
-    def test_anything_else_goes_to_a_person_from_anyone(self):
-        result, _, text = self.run_form(issue("other", ("What should change?", "Please add a menu item."), user="stranger"))
-        self.assertEqual(result, "waiting")
-        self.assertIn("passed on to the people who look after PredictIndex (@hannah, @kirsten)", text)
-        self.assertEqual(self.run_form(issue("other", ("What should change?", "x")), action="edited")[0], "skip")
+    def test_the_former_form_anything_else_is_skipped(self):
+        self.assertEqual(self.run_form(issue("other", ("What should change?", "Please add a menu item.")))[0], "skip")
+
+    def test_a_category_form_from_someone_without_access_is_closed_too(self):
+        result, _, text = self.run_form(issue("options", (Q["action"], "Remove a category"), (Q["category"], "Species"),
+                                              user="stranger"))
+        self.assertEqual(result, "declined")
+        self.assertNothingChanged()
 
 
 class RunningAForm(Forms):
@@ -516,24 +598,27 @@ class GeneratedFormParts(Forms):
 
     def test_sync_writes_the_data_into_the_forms(self):
         changed = pi.sync(self.root)
-        self.assertEqual(changed, ["1-add-a-study.yml", "2-change-a-study.yml", "3-change-the-options.yml"])
-        add, change, opts = (self.template(n) for n in ("1-add-a-study.yml", "2-change-a-study.yml", "3-change-the-options.yml"))
+        self.assertEqual(changed, ["1-add-a-study.yml", "2-change-a-study.yml", "3-change-a-label.yml",
+                                   "4-change-a-category.yml"])
+        add, change, opts, cats = (self.template(n) for n in ("1-add-a-study.yml", "2-change-a-study.yml",
+                                                              "3-change-a-label.yml", "4-change-a-category.yml"))
         self.assertIn('    id: label_population\n    attributes:\n      label: "Population"', add)
         self.assertIn('        - label: "Clinical: schizophrenia"', add)
         self.assertIn('        - "An unpublished study"\n        - "A published study"\n        # end of generated: studies', change)
         self.assertEqual(change.count('        - "Population: Clinical: autism"'), 2)
         self.assertIn('        - "Recording technique"\n        # end of generated: categories', opts)
+        self.assertIn('        - "Recording technique"\n        # end of generated: categories', cats)
         self.assertEqual(pi.sync(self.root), [])  # a second run changes nothing
 
     def test_a_form_changes_the_lists_after_the_next_sync(self):
         pi.sync(self.root)
-        self.run_form(issue("options", (Q["category"], "Recording technique"), (Q["action"], "Add an option"),
+        self.run_form(issue("options", (Q["category"], "Recording technique"), (Q["action"], "Add a label"),
                             (Q["current"], ""), (Q["new"], "MEG")))
         self.assertEqual(pi.sync(self.root), ["1-add-a-study.yml", "2-change-a-study.yml"])
         self.assertIn('"Recording technique: MEG"', self.template("2-change-a-study.yml"))
 
     def test_a_part_without_its_end(self):
-        path = self.root / ".github" / "ISSUE_TEMPLATE" / "3-change-the-options.yml"
+        path = self.root / ".github" / "ISSUE_TEMPLATE" / "3-change-a-label.yml"
         path.write_text(path.read_text(encoding="utf-8").replace("# end of generated: categories", ""), encoding="utf-8")
         with self.assertRaises(ValueError):
             pi.sync(self.root)
@@ -549,27 +634,36 @@ class FormsAndScriptAgree(unittest.TestCase):
     def test_add_a_study(self):
         labels, text = self.labels("1-add-a-study.yml")
         for k in ("name", "paper_title", "authors", "corresponding", "published", "paper", "data",
-                  "participants", "sessions", "google", "notes"):
+                  "participants", "sessions", "additional", "notes"):
             self.assertIn(Q[k], labels)
         self.assertIn('labels: ["form: add"]', text)
 
     def test_change_a_study(self):
         labels, text = self.labels("2-change-a-study.yml")
         for k in ("study", "remove", "name", "paper_title", "authors", "corresponding", "published", "paper",
-                  "data", "participants", "sessions", "acquisition", "bids", "add_labels", "remove_labels", "other"):
+                  "data", "participants", "sessions", "acquisition", "bids", "additional", "add_labels",
+                  "remove_labels"):
             self.assertIn(Q[k], labels)
         self.assertIn('labels: ["form: change"]', text)
 
-    def test_change_the_options(self):
-        labels, text = self.labels("3-change-the-options.yml")
+    def test_change_a_label(self):
+        labels, text = self.labels("3-change-a-label.yml")
         for k in ("category", "action", "current", "new"):
             self.assertIn(Q[k], labels)
         self.assertIn('labels: ["form: options"]', text)
 
-    def test_anything_else(self):
-        labels, text = self.labels("4-anything-else.yml")
-        self.assertIn("What should change?", labels)
-        self.assertIn('labels: ["form: other"]', text)
+    def test_change_a_category(self):
+        labels, text = self.labels("4-change-a-category.yml")
+        for k in ("action", "category", "new_name", "new_labels", "explanation"):
+            self.assertIn(Q[k], labels)
+        self.assertIn('labels: ["form: options"]', text)
+        for action in ("Add a category", "Rename a category", "Change a category's explanation", "Remove a category"):
+            self.assertIn(f'- "{action}"', text)
+
+    def test_no_other_forms(self):
+        names = sorted(p.name for p in (REPO / ".github" / "ISSUE_TEMPLATE").glob("*.yml"))
+        self.assertEqual(names, ["1-add-a-study.yml", "2-change-a-study.yml", "3-change-a-label.yml",
+                                 "4-change-a-category.yml", "config.yml"])
 
     # Whether the repository's data passes the checks and whether the generated
     # parts of its forms are up to date is not tested here: the Deploy workflow

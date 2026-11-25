@@ -1,0 +1,59 @@
+name: Change a category
+description: Add, rename or remove a whole category of labels, for example Age group, or change its explanation. The filters on PredictIndex and the GitHub forms follow.
+title: "Change a category"
+labels: ["form: options"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Removing a category removes its labels from every study; the reply lists them.
+
+        To add, rename or remove a single label within a category, please use the form Change a label.
+  - type: dropdown
+    id: action
+    attributes:
+      label: What should change?
+      options:
+        - "Add a category"
+        - "Rename a category"
+        - "Change a category's explanation"
+        - "Remove a category"
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      description: "For Rename, Change the explanation and Remove: the category as it is now."
+      options:
+        # generated: categories (written by .github/scripts/predictindex.py sync from options.json; do not edit by hand)
+        - "Species"
+        - "Population"
+        - "Age group"
+        - "Task paradigm"
+        - "Task-relevant vs. task-irrelevant"
+        - "Type of prior"
+        - "Induction of prior"
+        - "Predictability"
+        - "Volatility"
+        - "Sensory modality"
+        - "Stimulus properties"
+        - "Stimulus quality"
+        - "Recording technique"
+        - "Anatomical scale"
+        # end of generated: categories
+  - type: input
+    id: new_name
+    attributes:
+      label: New name
+      description: "For Add and Rename: the category's name as PredictIndex shows it, for example Age group. It cannot contain a comma or a colon."
+  - type: textarea
+    id: new_labels
+    attributes:
+      label: Labels of the new category
+      description: "For Add: its labels, one per line, for example Children, Adults and Older adults on three lines. A label cannot contain a comma."
+  - type: input
+    id: explanation
+    attributes:
+      label: Explanation
+      description: "Optional, for Add and Change the explanation: one sentence shown with the category in the GitHub forms, for example Do the priors change, so that they need updating? A dash (-) removes it."

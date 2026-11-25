@@ -46,18 +46,5 @@
       "Pupillometry",
       "Behavioural responses"
     ]
-  },
-  "descriptions": {
-    "species": "human",
-    "population": "healthy",
-    "paradigm": "listening to vowel sequences (random vs structured in pairs)",
-    "priorType": "sequence structure (random vs pairs)",
-    "priorInduction": "none/implicit (Exp1), explicit (Exp2)",
-    "predictability": "constant",
-    "volatility": "no volatility",
-    "modality": "auditory",
-    "stimulus": "recorded spoken vowels (8 or 18 speakers)",
-    "stimulusQuality": "noise-vocoded but intelligible",
-    "technique": "pupillometry, behavioural logs"
   }
 }

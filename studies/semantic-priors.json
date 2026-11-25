@@ -47,17 +47,5 @@
       "Behavioural responses"
     ]
   },
-  "descriptions": {
-    "species": "human",
-    "population": "healthy",
-    "paradigm": "predicting auditory words from visual/semantic cues",
-    "priorType": "visual/semantic speaker prior",
-    "priorInduction": "explicit",
-    "predictability": "equal",
-    "volatility": "no volatility",
-    "modality": "auditory, visual",
-    "stimulus": "morphed words",
-    "stimulusQuality": "noise-vocoded, morphed",
-    "technique": "EEG, behavioural"
-  }
+  "additionalInfo": "Task: predicting auditory words from visual or semantic cues"
 }

@@ -216,10 +216,10 @@ body:
         - label: "Laminar / layer-specific"
   # end of generated: label-checkboxes
   - type: textarea
-    id: google_form
+    id: additional
     attributes:
-      label: Answers from the Google Form
-      description: "Please leave this empty. It is filled in automatically when this form is opened from the e-mail about a new answer in the Google Form."
+      label: Additional information
+      description: "Optional. Anything about the study that the labels do not cover; it is shown in the study's Details. For a study from the Google Form, copy the answer to its question Additional information you would like to add."
   - type: textarea
     id: notes
     attributes:

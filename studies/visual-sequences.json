@@ -25,13 +25,5 @@
     "technique": [
       "EEG"
     ]
-  },
-  "descriptions": {
-    "species": "human",
-    "population": "healthy",
-    "volatility": "no volatility",
-    "modality": "visual",
-    "stimulus": "images",
-    "technique": "+ EEG"
   }
 }

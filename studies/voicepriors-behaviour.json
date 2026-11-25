@@ -35,15 +35,5 @@
       "Behavioural responses"
     ]
   },
-  "descriptions": {
-    "species": "human",
-    "population": "healthy German speaking online sample",
-    "priorType": "categorical voice prior",
-    "priorInduction": "learning prior distribution",
-    "predictability": "equal",
-    "volatility": "no volatility",
-    "modality": "auditory",
-    "stimulus": "voice samples manipulated in pitch (F0) and brightness (formant frequencies)",
-    "technique": "behavioral responses"
-  }
+  "additionalInfo": "Sample: healthy German-speaking online sample"
 }

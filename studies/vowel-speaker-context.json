@@ -40,17 +40,5 @@
     "technique": [
       "Behavioural responses"
     ]
-  },
-  "descriptions": {
-    "species": "human",
-    "population": "healthy",
-    "paradigm": "listening to vowels spoken by different \"manipulated\" speakers",
-    "priorType": "implicit: speaker context (short, intermediate, long)",
-    "priorInduction": "implicit",
-    "volatility": "no volatility",
-    "modality": "auditory",
-    "stimulus": "minimal word pairs with o/u-vowels - differently manipulated speakers (F0 / FF)",
-    "stimulusQuality": "clear words",
-    "technique": "behavioral responses"
   }
 }

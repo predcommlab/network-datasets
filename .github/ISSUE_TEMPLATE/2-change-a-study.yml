@@ -96,6 +96,11 @@ body:
     attributes:
       label: BIDS task label
       description: "Shown in Details, for example task-statements."
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional information
+      description: "Anything about the study that the labels do not cover, shown in Details. It replaces the study's current additional information; a dash (-) removes it."
   - type: dropdown
     id: labels_add
     attributes:
@@ -238,8 +243,3 @@ body:
         - "Anatomical scale: Region of interest (ROI)"
         - "Anatomical scale: Laminar / layer-specific"
         # end of generated: labels
-  - type: textarea
-    id: other
-    attributes:
-      label: Other changes
-      description: "Anything else to change on this study. This part is not automatic: it goes to the people who look after PredictIndex, who make the change and reply here."

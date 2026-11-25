@@ -37,24 +37,12 @@
       "Speech"
     ],
     "stimulusQuality": [
-      "Noisy (degraded)"
+      "Noisy (degraded)",
+      "Ambiguous (e.g. morphed)"
     ],
     "technique": [
       "EEG",
       "Behavioural responses"
     ]
-  },
-  "descriptions": {
-    "species": "human",
-    "population": "healthy",
-    "paradigm": "listening to syllable sequences (random vs. structured in triplets)",
-    "priorType": "sequence (syllable triplets)",
-    "priorInduction": "explicit (triplet training)",
-    "predictability": "constant",
-    "volatility": "no volatility",
-    "modality": "auditory",
-    "stimulus": "recorded spoken CV-syllables (clear and morphed)",
-    "stimulusQuality": "noise-vocoded but intelligible",
-    "technique": "EEG, behavioural logs"
   }
 }

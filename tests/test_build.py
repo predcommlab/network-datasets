@@ -40,7 +40,7 @@ PUBLISHED = {
     "participants": "30",
     "added": "2026-09-12",
     "labels": {"species": ["Human"], "technique": ["EEG", "fMRI"]},
-    "descriptions": {"paradigm": "listening to tones"},
+    "additionalInfo": "Task: listening to tones",
 }
 UNPUBLISHED = {
     "name": "An unpublished study",
@@ -136,9 +136,9 @@ class Checks(Data):
         self.assertProblem('"paper" has to be a DOI')
 
     def test_no_e_mail_address_anywhere(self):
-        self.change("published.json", descriptions={"paradigm": "ask ann@example.org"})
+        self.change("published.json", additionalInfo="ask ann@example.org")
         self.assertProblem('contains "@"')
-        self.change("published.json", descriptions={"paradigm": "tones"}, correspondingAuthor="ann@example.org")
+        self.change("published.json", additionalInfo="tones", correspondingAuthor="ann@example.org")
         self.assertProblem('contains "@"')
 
     def test_required_fields(self):
@@ -181,9 +181,14 @@ class Checks(Data):
         self.write("studies/.DS_Store", "\x00\x01")
         self.assertEqual(self.problems(), [])
 
-    def test_a_description_of_an_unknown_category(self):
-        self.change("published.json", descriptions={"colour": "red"})
-        self.assertProblem('"colour" is not a category')
+    def test_the_former_descriptions_are_refused(self):
+        # merged into the labels and Additional information on 2026-11-25
+        self.change("published.json", descriptions={"paradigm": "listening to tones"})
+        self.assertProblem('unknown field "descriptions"')
+
+    def test_additional_information_is_a_piece_of_text(self):
+        self.change("published.json", additionalInfo=["a list"])
+        self.assertProblem('"additionalInfo" has to be a piece of text')
 
 
 class OptionChecks(Data):
@@ -240,7 +245,7 @@ class ChangingOptions(Data):
         self.assertEqual(pi.category(options, "paradigm")["options"], ["Oddball", "Detection", "Rating", "Memory"])
 
     def test_rename_an_option_everywhere(self):
-        self.change("unpublished.json", labels={"technique": ["EEG"]}, descriptions={"technique": "eeg"})
+        self.change("unpublished.json", labels={"technique": ["EEG"]})
         options, studies = self.loaded()
         touched = pi.rename_option(options, studies, "technique", "EEG", "Electroencephalography")
         pi.save(self.root, options, studies)
@@ -249,7 +254,7 @@ class ChangingOptions(Data):
         self.assertEqual(sorted(touched), ["published", "unpublished"])
         self.assertEqual(pi.category(options, "technique")["options"], ["Electroencephalography", "fMRI"])
         self.assertEqual(data["published"]["labels"]["technique"], ["Electroencephalography", "fMRI"])
-        self.assertEqual(data["unpublished"]["descriptions"]["technique"], "Electroencephalography")
+        self.assertEqual(data["unpublished"]["labels"]["technique"], ["Electroencephalography"])
 
     def test_a_rename_onto_an_existing_option_merges_the_two(self):
         options, studies = self.loaded()
@@ -258,8 +263,7 @@ class ChangingOptions(Data):
         self.assertEqual(dict(studies)["published"]["labels"]["technique"], ["fMRI"])
 
     def test_remove_an_option_everywhere(self):
-        self.change("published.json", labels={"species": ["Human"], "paradigm": ["Rating"]},
-                    descriptions={"paradigm": "rating", "species": "adult humans"})
+        self.change("published.json", labels={"species": ["Human"], "paradigm": ["Rating"]})
         options, studies = self.loaded()
         touched = pi.remove_option(options, studies, "paradigm", "Rating")
         pi.save(self.root, options, studies)
@@ -268,8 +272,14 @@ class ChangingOptions(Data):
         self.assertEqual(touched, ["published"])
         self.assertEqual(pi.category(options, "paradigm")["options"], ["Oddball"])
         self.assertNotIn("paradigm", data["labels"])           # no empty list left behind
-        self.assertNotIn("paradigm", data["descriptions"])     # it only repeated the option
-        self.assertEqual(data["descriptions"]["species"], "adult humans")
+        self.assertEqual(data["labels"]["species"], ["Human"])
+
+    def test_a_category_name_with_a_comma_or_a_colon(self):
+        for bad in ("Task, paradigm", "Task: paradigm"):
+            with self.subTest(bad=bad):
+                options = json.loads(json.dumps(OPTIONS))
+                options["categories"][1]["label"] = bad
+                self.assertTrue(any("contains a comma or a colon" in p for p in pi.check_options(options)))
 
     def test_saved_options_keep_the_order_of_their_entries(self):
         options, studies = self.loaded()
@@ -298,10 +308,11 @@ class PageData(Data):
         self.assertNotIn("paper", s)
         self.assertNotIn("preprint", s)
         self.assertEqual(s["labels"], {"species": ["Human"], "technique": ["EEG", "fMRI"]})
+        self.assertEqual(s["additionalInfo"], "Task: listening to tones")
         u = next(s for s in studies if s["id"] == "unpublished")
         self.assertNotIn("paperLink", u)
         self.assertNotIn("dataUrl", u)
-        self.assertEqual(u["descriptions"], {})
+        self.assertNotIn("additionalInfo", u)
 
     def test_a_paper_link_that_is_not_a_doi(self):
         self.change("published.json", paper="https://elifesciences.org/articles/103689")
@@ -345,7 +356,7 @@ class PageData(Data):
     def test_a_file_written_by_the_script_reads_back_the_same(self):
         order = [c["key"] for c in OPTIONS["categories"]]
         messy = dict(PUBLISHED, name="  A   published study ", labels={"technique": ["EEG"], "species": ["Human"]},
-                     sessions="", descriptions={"paradigm": "listening\n to tones"})
+                     sessions="", additionalInfo="  Task:  listening\n to   tones \n\n Sample: online ")
         once = pi.dump_json(pi.canonical_study(messy, order))
         again = pi.dump_json(pi.canonical_study(json.loads(once), order))
         self.assertEqual(once, again)
@@ -353,7 +364,7 @@ class PageData(Data):
         self.assertEqual(data["name"], "A published study")
         self.assertEqual(list(data["labels"]), ["species", "technique"])
         self.assertNotIn("sessions", data)
-        self.assertEqual(data["descriptions"]["paradigm"], "listening to tones")
+        self.assertEqual(data["additionalInfo"], "Task: listening\nto tones\nSample: online")  # its lines kept
 
 
 if __name__ == "__main__":

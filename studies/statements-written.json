@@ -28,12 +28,5 @@
       "Behavioural responses"
     ]
   },
-  "descriptions": {
-    "species": "human",
-    "population": "general online sample, Germany",
-    "paradigm": "ratings of statements",
-    "modality": "visual / written",
-    "stimulus": "statements (2 sentences each)",
-    "technique": "behavioral responses"
-  }
+  "additionalInfo": "Sample: general online sample, Germany"
 }
