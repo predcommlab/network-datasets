@@ -14,11 +14,19 @@ is for:
 
 | Part | What it is for |
 | ------------- | ------------------------------- |
-| **The page**, predcommlab.github.io/network-datasets | Lists the studies. Visitors can search, filter by labels and download the studies they see as an Excel table. |
-| **The GitHub repository**, github.com/predcommlab/network-datasets | Holds everything the page shows: one file per study in the folder `studies`, and the categories with their labels in the file `options.json`. |
-| **The GitHub forms**, github.com/predcommlab/network-datasets/issues/new/choose | How you change PredictIndex (sections 2 to 4). A program carries out each form, updates the page and replies on the form. You need to be signed in to GitHub. The forms are only for the people who look after PredictIndex: a form from anyone else is closed at once, unread. |
-| **The Google Form** [Add your study to PredictIndex](https://docs.google.com/forms/d/e/1FAIpQLScZ5s-y-Vw1pWGzYse1Ns0ZZnWvLxaNG9NpUlqrsu2GuPuIMA/viewform) | Where researchers outside the lab describe their study, so they never need GitHub. Send them this link when you invite them (section 5). |
-| **The Google Sheet** "PredictIndex: submitted studies" | Linked to the Google Form: it stores every answer, one row per answer, with the sender's e-mail address (section 5). |
+| **The page**: [predcommlab.github.io/network-datasets](https://predcommlab.github.io/network-datasets/) | Lists the studies. Visitors can search, filter by labels and download the studies they see as an Excel table. |
+| **The GitHub repository**: [github.com/predcommlab/network-datasets](https://github.com/predcommlab/network-datasets) | Holds everything the page shows: one file per study in the folder `studies`, and the categories with their labels in the file `options.json`. |
+| **The GitHub forms**: [github.com/predcommlab/network-datasets/issues/new/choose](https://github.com/predcommlab/network-datasets/issues/new/choose) | How you change PredictIndex (sections 2 to 4). A program carries out each form, updates the page and replies on the form. You need to be signed in to GitHub. The forms are only for the people who look after PredictIndex: a form from anyone else is closed at once, unread. |
+| **The Google Form** "Add your study to PredictIndex": [link for researchers](https://docs.google.com/forms/d/e/1FAIpQLScZ5s-y-Vw1pWGzYse1Ns0ZZnWvLxaNG9NpUlqrsu2GuPuIMA/viewform), [link for editing](https://docs.google.com/forms/d/1-mgcaKgDN48nyrk-k2S3NPfX4S9o0-g9ICRUWnkaF4Y/edit) | Where researchers outside the lab describe their study, so they never need GitHub. Send them the link for researchers when you invite them. The link for editing opens the answers and the questions (section 5). |
+| **The Google Sheet** "PredictIndex: submitted studies": [link](https://docs.google.com/spreadsheets/d/1jsBNdJ39WDYY12xa2nYABqmmZYzgVSrymIOVP34mInc/edit) | Linked to the Google Form: it stores every answer, one row per answer, with the sender's e-mail address (section 5). |
+
+The links for editing the form and the sheet open only for the people they are
+shared with.
+
+**Why the repository is public:** on the lab's free GitHub plan, GitHub publishes
+a page only from a public repository; a private repository would take
+PredictIndex offline. So everything in it, the forms and the replies included,
+can be read by anyone (see section 8).
 
 ## 2. How to send a form
 
@@ -136,7 +144,7 @@ A category's name cannot contain a comma or a colon.
 
 ### Adding an answer to PredictIndex
 
-1. Open the answer: in the Google Form, **Responses** → **Individual**, or its
+1. Open the answer: in the Google Form (link for editing, section 1), **Responses** → **Individual**, or its
    row in the sheet.
 2. Check it: the study belongs on PredictIndex, the paper link opens and belongs
    to this study, and the data link opens and is public.
@@ -162,13 +170,15 @@ Good to know:
 ## 6. People and access
 
 **Who looks after PredictIndex:** their GitHub user names are in **Settings →
-Secrets and variables → Actions → Variables → MAINTAINER**, separated by spaces.
-Every form is assigned to them, and they are mentioned when something goes
-wrong. (Only administrators of the repository see Settings.)
+Secrets and variables → Actions → Variables → MAINTAINER**
+([direct link](https://github.com/predcommlab/network-datasets/settings/variables/actions)),
+separated by spaces. Every form is assigned to them, and they are mentioned when
+something goes wrong. (Only administrators of the repository see Settings.)
 
 ![Settings, Secrets and variables, Actions, on the tab Variables, with the menu entry, the tab and the line MAINTAINER marked](guide-images/maintainer-variable.png)
 
-**Access:** **Settings → Collaborators and teams**. Give the people who look
+**Access:** **Settings → Collaborators and teams**
+([direct link](https://github.com/predcommlab/network-datasets/settings/access)). Give the people who look
 after PredictIndex **Admin** access (needed to change MAINTAINER), or at least
 **Write** access. A form from someone without Write access is closed at once,
 unread.
